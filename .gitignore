@@ -1,0 +1,12 @@
+# secrets
+.env
+
+# user-uploaded content - lives on the server, never in git
+public/uploads/*
+!public/uploads/.gitkeep
+!public/uploads/.htaccess
+
+# OS/editor cruft
+.DS_Store
+Thumbs.db
+.vscode/

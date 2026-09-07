@@ -1,0 +1,6 @@
+# Defence in depth: if a .env or .sql file is ever mistakenly placed
+# inside public_html, refuse to serve it.
+<FilesMatch "\.(env|sql|md)$">
+    Require all denied
+</FilesMatch>
+
