@@ -24,16 +24,16 @@ u3a-website/                      <- git repo root
 │   │   └── constants.php         <- NON-secret constants only (site name, addresses...)
 │   ├── inc/
 │   │   ├── functions.php         <- general helpers (query(), redirect(), test_input()...)
-│   │   ├── auth_functions.php    <- register/login/roles/password helpers
+│   │   ├── auth.php              <- login/role/permission helpers
 │   │   ├── presentation_functions.php
 │   │   ├── member_functions.php  <- users, roles, payments
+│   ├── page/
+│   │   ├── public/                (home, recordings, login, register)
+│   │   ├── members/                (password change, etc — logged-in, any role)
+│   │   └── admin/                  (CRUD: presentations, members, payments)
 │   └── templates/
 │       ├── header.php
 │       └── footer.php
-│
-│   (correction: browser-facing pages - login.php, register.php, recordings.php,
-│    admin pages, etc - live in public/, not under app/. Anything inside app/
-│    is not web-accessible, so page controllers can't go there.)
 │
 ├── sql/
 │   └── migrations/                <- one numbered .sql file per schema change
@@ -99,10 +99,9 @@ can register." For w2:
 ## Backlog (not building all of this now — one bite at a time)
 
 **Foundational (do first, unlocks everything else)**
-1. ~~Repo skeleton + `.env` handling + deploy pipeline decision~~ ✅ done
-2. ~~`users` table + roles + password hashing (bcrypt, register/login/change/admin-reset)~~ ✅ done
-3. Membership data cleanup (Excel + CSV comparison) — in progress
-4. Import cleaned member data into `users` (temporary passwords, forced change)
+1. Repo skeleton + `.env` handling + deploy pipeline decision
+2. `users` table migration (add name/email fields, decouple from `people`)
+3. Password hashing migration (bcrypt, transparent upgrade on login)
 
 **Content**
 4. Homepage: about text + committee photo (with upload facility) — editable
