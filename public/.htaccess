@@ -1,6 +1,15 @@
+# U3A Port Alfred - production .htaccess (deployed from public/ to public_html/)
+
+# Do not list folder contents (e.g. /docs/, /img/) when there is no index file
+Options -Indexes
+
+# Use index.php as the home page
+DirectoryIndex index.php index.html
+
 # Defence in depth: if a .env or .sql file is ever mistakenly placed
 # inside public_html, refuse to serve it.
 <FilesMatch "\.(env|sql|md)$">
     Require all denied
 </FilesMatch>
 
+# HTTPS is forced by cPanel ("Force HTTPS Redirect" in Domains), not here.

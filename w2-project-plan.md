@@ -60,12 +60,42 @@ u3a-website/                      <- git repo root
 - `sql/migrations/` gives us a paper trail of schema changes instead of one
   giant dump — useful once more than one person touches the DB.
 
-**One thing I need from you:** does your cPanel plan give you SSH access and/or
-the "Git™ Version Control" feature, or is it File Manager/FTP only? That decides
-whether we deploy via `git pull` on the server (clean, fast) or a GitHub Action
-that pushes files over FTP/SFTP on every merge to `main` (works anywhere, no
-shell needed). Either works with the structure above — just tell me which
-access you have and I'll write the actual deploy steps.
+## Production hosting (confirmed 2026-10-08)
+
+- Host: cPanel, domain `u3aportalfred.org.za`. **No Git Version Control and no
+  SSH** on this account — **FTP / File Manager only**.
+- PHP 8.4.26 (native; extensions cannot be changed). Available: `pdo_mysql`,
+  `mysqli`, `mbstring`, `openssl`, `curl`, Argon2 for `password_hash()`.
+  **Not available:** `sodium` — use `openssl` for any encryption.
+- Database: MariaDB 11.4, server default charset is latin1 → every w2 database,
+  table and connection must be explicitly **utf8mb4**.
+- Use PDO with prepared statements (no emulated prepares). Retire the SQL Server
+  (`sqlsrv`) example config from w1.
+- Local dev (Laragon) runs PHP 8.4.3, so it matches production.
+- HTTPS is forced by cPanel ("Force HTTPS Redirect" is on).
+- `w1/index_live.php` is the live home page (uploaded manually as `index.php`);
+  its production `.htaccess` is kept in `w1/deploy/htaccess.production`.
+
+**Deployment (decided 2026-10-08):** GitHub Action over FTPS
+(`.github/workflows/deploy.yml`, credentials in GitHub secrets) on every push to
+`main`. It must **never touch** `.env` or `public/uploads/`.
+
+**Home page rule:** the pretty public home page (`public/index.php`, plus
+`public/css|js|img|docs|favicon.ico` and `public/.htaccess`) is part of this
+repo, so every deploy keeps it. It may change (menu, content) but is never
+replaced by placeholder/dummy code; changes are previewed on the test subdomain
+before `main`. Because a push to `main` deploys straight to `public_html/`, do
+work on a branch and merge to `main` only when ready.
+
+**cPanel mapping of the tree above:** `public/` → `public_html/` (or the test
+subdomain's folder); everything else (`app/`, `sql/`, `.env`) → a private folder
+outside the web root, in the FTP home directory (`~/app/`, `~/sql/`, `~/.env`), as set up in `deploy.yml`. `index.php` locates
+`app/` with a relative path to that folder.
+
+**Test first:** create a subdomain such as `w2.u3aportalfred.org.za` with its
+own document root and its own database, so w2 can be tested on the real server
+without touching the live home page. Only at go-live is the main domain switched.
+
 
 ## Users & roles — redesign
 
@@ -75,7 +105,7 @@ can register." For w2:
 
 - `users` gains `first_name`, `surname`, `given_name`, `email` directly —
   no dependency on the `people` table for U3A members.
-- Password hashing moves to `password_hash()` / `password_verify()` (bcrypt).
+- Password hashing moves to `password_hash($pw, PASSWORD_DEFAULT)` / `password_verify()` (bcrypt today; `password_needs_rehash()` handles upgrades; Argon2 also available on the host).
   The current `crypt()` calls use PHP's default DES-based hashing (very weak,
   effectively only the first 8 characters matter). We can migrate gradually:
   on successful login, if a user's hash is still old-format, transparently
