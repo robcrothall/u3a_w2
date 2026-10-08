@@ -1,5 +1,6 @@
 <?php
-require __DIR__ . "/../app/config/config.php";
+require __DIR__ . "/_app_path.php";
+require APP_DIR . "/config/config.php";
 
 $errors = [];
 $email = "";
@@ -27,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
-require __DIR__ . "/../app/templates/header.php";
+require APP_DIR . "/templates/header.php";
 ?>
 <div class="container mt-5" style="max-width: 420px;">
     <h1>Log in</h1>
@@ -56,4 +57,4 @@ require __DIR__ . "/../app/templates/header.php";
     <p>Not registered yet? <a href="/register.php">Register here</a>.</p>
 </div>
 <?php
-require __DIR__ . "/../app/templates/footer.php";
+require APP_DIR . "/templates/footer.php";

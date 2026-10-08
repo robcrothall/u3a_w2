@@ -1,5 +1,6 @@
 <?php
-require __DIR__ . "/../../app/config/config.php";
+require __DIR__ . "/../_app_path.php";
+require APP_DIR . "/config/config.php";
 require_role("admin");
 
 $search = trim($_GET["search"] ?? "");
@@ -25,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !empty($_POST["reset_user_id"])) {
     }
 }
 
-require __DIR__ . "/../../app/templates/header.php";
+require APP_DIR . "/templates/header.php";
 ?>
 <div class="container mt-5">
     <h1>Reset a Member's Password</h1>
@@ -79,4 +80,4 @@ require __DIR__ . "/../../app/templates/header.php";
     <?php endif; ?>
 </div>
 <?php
-require __DIR__ . "/../../app/templates/footer.php";
+require APP_DIR . "/templates/footer.php";

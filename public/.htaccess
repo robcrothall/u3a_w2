@@ -1,4 +1,4 @@
-# U3A Port Alfred - production .htaccess (deployed from public/ to public_html/)
+# U3A Port Alfred - .htaccess (deployed from public/)
 
 # Do not list folder contents (e.g. /docs/, /img/) when there is no index file
 Options -Indexes
@@ -7,9 +7,19 @@ Options -Indexes
 DirectoryIndex index.php index.html
 
 # Defence in depth: if a .env or .sql file is ever mistakenly placed
-# inside public_html, refuse to serve it.
+# inside public_html, refuse to serve it. Also hide the FTP deploy bookkeeping
+# and PHP error logs.
 <FilesMatch "\.(env|sql|md)$">
     Require all denied
 </FilesMatch>
+<FilesMatch "^(\.ftp-deploy-sync-state.*\.json|\.ftpquota|error_log)$">
+    Require all denied
+</FilesMatch>
+
+# The test site lives in a folder inside public_html. Stop it being reachable
+# through the main domain's address (the w2 subdomain itself is unaffected).
+RewriteEngine On
+RewriteCond %{HTTP_HOST} !^w2\.u3aportalfred\.org\.za$ [NC]
+RewriteRule ^w2\.u3aportalfred\.org\.za(/|$) - [F,L]
 
 # HTTPS is forced by cPanel ("Force HTTPS Redirect" in Domains), not here.

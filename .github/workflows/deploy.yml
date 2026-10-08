@@ -1,17 +1,23 @@
 name: Deploy to cPanel
 
+# main    -> LIVE site   (public_html/, ~/app, ~/sql)
+# staging -> TEST site   (https://w2.u3aportalfred.org.za, ~/w2/app, ~/w2/sql)
+# Work on a branch, merge to staging to test, merge to main to go live.
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
 
 jobs:
-  deploy:
+  deploy-live:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # public/ contents -> public_html/ (the web-served folder)
+      # public/ contents -> public_html/ (the web-served folder).
+      # The login/registration pages are NOT published on the live site until
+      # go-live; remove them from the exclude list below at that point.
       - name: Deploy public/ to public_html
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -25,6 +31,11 @@ jobs:
           exclude: |
             **/uploads/**
             **/.git*
+            login.php
+            register.php
+            change_password.php
+            logout.php
+            admin/**
 
       # app/ -> app/ (outside public_html - not web-accessible)
       - name: Deploy app/ to home directory
@@ -49,3 +60,46 @@ jobs:
           local-dir: ./sql/
           server-dir: ./sql/
           state-name: .ftp-deploy-sync-state-sql.json
+
+  deploy-staging:
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy public/ to the test subdomain folder
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./public/
+          server-dir: ./public_html/w2.u3aportalfred.org.za/
+          state-name: .ftp-deploy-sync-state-w2-public.json
+          exclude: |
+            **/uploads/**
+            **/.git*
+
+      - name: Deploy app/ to ~/w2/app
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./app/
+          server-dir: ./w2/app/
+          state-name: .ftp-deploy-sync-state-w2-app.json
+
+      - name: Deploy sql/ to ~/w2/sql
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./sql/
+          server-dir: ./w2/sql/
+          state-name: .ftp-deploy-sync-state-w2-sql.json
