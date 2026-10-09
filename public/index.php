@@ -10,6 +10,19 @@
  * @license  GPL 1.0 or later
  * @link     https://u3aportalfred.org.za
  */
+
+// Member menu items (Login, Register, ...) appear only where the member pages
+// are deployed. The live site does not publish login.php yet, so it stays a
+// fully static page that needs no .env or database.
+$members_enabled = is_file(__DIR__ . "/login.php");
+$logged_in = false;
+$is_admin = false;
+if ($members_enabled) {
+    require __DIR__ . "/_app_path.php";
+    require APP_DIR . "/config/config.php";
+    $logged_in = !empty($_SESSION["id"]);
+    $is_admin = $logged_in && user_has_role((int) $_SESSION["id"], "admin");
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -61,6 +74,16 @@
           <ul class="navbar-nav ms-auto">
             <li class="nav-item"><a class="nav-link active" aria-current="page" href="#home">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="#contact">Contact us</a></li>
+<?php if ($members_enabled && !$logged_in): ?>
+            <li class="nav-item"><a class="nav-link" href="/register.php">Register</a></li>
+            <li class="nav-item"><a class="nav-link" href="/login.php">Login</a></li>
+<?php elseif ($members_enabled): ?>
+            <li class="nav-item"><a class="nav-link" href="/change_password.php">Change password</a></li>
+<?php if ($is_admin): ?>
+            <li class="nav-item"><a class="nav-link" href="/admin/reset_password.php">Reset member password</a></li>
+<?php endif; ?>
+            <li class="nav-item"><a class="nav-link" href="/logout.php">Log off</a></li>
+<?php endif; ?>
           </ul>
         </div>
       </div>
