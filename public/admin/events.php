@@ -54,6 +54,7 @@ require APP_DIR . "/templates/header.php";
                     <?php endif; ?>
                 </td>
                 <td class="text-end text-nowrap">
+                    <a class="btn btn-sm btn-outline-secondary" href="/admin/event_files.php?event_id=<?php echo (int) $event["id"]; ?>">Recordings</a>
                     <a class="btn btn-sm btn-outline-primary" href="/admin/event_edit.php?id=<?php echo (int) $event["id"]; ?>">Edit</a>
                     <form method="post" class="d-inline" onsubmit="return confirm('Delete this event? This cannot be undone.');">
                         <?php echo csrf_field(); ?>

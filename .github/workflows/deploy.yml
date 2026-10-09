@@ -36,6 +36,8 @@ jobs:
             change_password.php
             logout.php
             events.php
+            recordings.php
+            recording.php
             admin/**
 
       # app/ -> app/ (outside public_html - not web-accessible)

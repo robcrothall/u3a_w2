@@ -83,6 +83,7 @@ $home_events = $members_enabled ? events_upcoming(3) : [];
             <li class="nav-item"><a class="nav-link" href="/register.php">Register</a></li>
             <li class="nav-item"><a class="nav-link" href="/login.php">Login</a></li>
 <?php elseif ($members_enabled): ?>
+            <li class="nav-item"><a class="nav-link" href="/recordings.php">Recordings</a></li>
             <li class="nav-item"><a class="nav-link" href="/change_password.php">Change password</a></li>
 <?php if ($is_admin): ?>
             <li class="nav-item"><a class="nav-link" href="/admin/events.php">Manage events</a></li>
