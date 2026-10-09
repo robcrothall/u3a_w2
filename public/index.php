@@ -23,6 +23,8 @@ if ($members_enabled) {
     $logged_in = !empty($_SESSION["id"]);
     $is_admin = $logged_in && user_has_role((int) $_SESSION["id"], "admin");
 }
+// Next three published events; the Upcoming Events section is hidden when empty.
+$home_events = $members_enabled ? events_upcoming(3) : [];
 ?>
 <!doctype html>
 <html lang="en">
@@ -74,12 +76,16 @@ if ($members_enabled) {
           <ul class="navbar-nav ms-auto">
             <li class="nav-item"><a class="nav-link active" aria-current="page" href="#home">Home</a></li>
             <li class="nav-item"><a class="nav-link" href="#contact">Contact us</a></li>
+<?php if ($members_enabled): ?>
+            <li class="nav-item"><a class="nav-link" href="/events.php">Events</a></li>
+<?php endif; ?>
 <?php if ($members_enabled && !$logged_in): ?>
             <li class="nav-item"><a class="nav-link" href="/register.php">Register</a></li>
             <li class="nav-item"><a class="nav-link" href="/login.php">Login</a></li>
 <?php elseif ($members_enabled): ?>
             <li class="nav-item"><a class="nav-link" href="/change_password.php">Change password</a></li>
 <?php if ($is_admin): ?>
+            <li class="nav-item"><a class="nav-link" href="/admin/events.php">Manage events</a></li>
             <li class="nav-item"><a class="nav-link" href="/admin/reset_password.php">Reset member password</a></li>
 <?php endif; ?>
             <li class="nav-item"><a class="nav-link" href="/logout.php">Log off</a></li>
@@ -129,8 +135,36 @@ if ($members_enabled) {
         </div>
       </section>
 
-      <!-- Upcoming Events section hidden until content is available.
-           Restore from index.php (section id="events") when ready. -->
+      <?php if (!empty($home_events)): ?>
+      <section id="events" class="py-5 bg-light">
+        <div class="container">
+          <div class="text-center mb-5">
+            <h2>Upcoming Events</h2>
+            <p class="text-muted">Attend our meetings on the second and fourth Thursday of each month
+              in the Settlers Park Don Powis Hall at 09h30 for 10h00.
+              Enjoy a cup of tea or coffee and chat before the meeting.
+              The presentations are followed by a Q&amp;A session with the presenter.
+            </p>
+          </div>
+          <div class="row g-4">
+            <?php foreach ($home_events as $event): ?>
+            <div class="col-md-4">
+              <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                  <h5 class="card-title"><?php echo htmlspecialchars(event_date_label($event["presentation_date"])); ?></h5>
+                  <p class="card-text fw-bold"><?php echo htmlspecialchars($event["presenter_name"]); ?> &ndash; <?php echo htmlspecialchars($event["title"]); ?></p>
+                  <?php if (!empty($event["summary"])): ?>
+                  <p class="card-text"><?php echo nl2br(htmlspecialchars($event["summary"])); ?></p>
+                  <?php endif; ?>
+                </div>
+              </div>
+            </div>
+            <?php endforeach; ?>
+          </div>
+          <p class="text-center mt-4"><a href="/events.php">All events, including past presentations</a></p>
+        </div>
+      </section>
+      <?php endif; ?>
 
       <section id="membership" class="py-5 bg-light">
         <div class="container">

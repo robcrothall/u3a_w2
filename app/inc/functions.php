@@ -82,3 +82,44 @@ function apologize(string $message)
     require dirname(__DIR__) . "/templates/footer.php";
     exit;
 }
+
+/**
+ * CSRF protection for state-changing forms. Put <?php echo csrf_field(); ?>
+ * inside every POST form, and call csrf_check() before acting on the POST.
+ */
+function csrf_token(): string
+{
+    if (empty($_SESSION["csrf_token"])) {
+        $_SESSION["csrf_token"] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION["csrf_token"];
+}
+
+function csrf_field(): string
+{
+    return '<input type="hidden" name="csrf_token" value="' . csrf_token() . '">';
+}
+
+function csrf_check(): void
+{
+    $sent = $_POST["csrf_token"] ?? "";
+    if (!is_string($sent) || !hash_equals(csrf_token(), $sent)) {
+        http_response_code(400);
+        exit("Invalid or expired form. Please go back, reload the page and try again.");
+    }
+}
+
+/**
+ * One-time message shown on the next page load (e.g. "Event saved").
+ */
+function flash_set(string $message, string $type = "success"): void
+{
+    $_SESSION["flash"] = ["message" => $message, "type" => $type];
+}
+
+function flash_get(): ?array
+{
+    $flash = $_SESSION["flash"] ?? null;
+    unset($_SESSION["flash"]);
+    return $flash;
+}

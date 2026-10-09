@@ -35,6 +35,7 @@ jobs:
             register.php
             change_password.php
             logout.php
+            events.php
             admin/**
 
       # app/ -> app/ (outside public_html - not web-accessible)

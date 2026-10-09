@@ -19,6 +19,7 @@ if ($search !== "") {
 }
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && !empty($_POST["reset_user_id"])) {
+    csrf_check();
     $reset_user_id = (int) $_POST["reset_user_id"];
     $reset_user = find_user_by_id($reset_user_id);
     if ($reset_user !== null) {
@@ -69,6 +70,7 @@ require APP_DIR . "/templates/header.php";
                 <td><?php echo htmlspecialchars($row["email"]); ?></td>
                 <td class="text-end">
                     <form method="post" onsubmit="return confirm('Reset the password for this member? They will need a new temporary password from you to log in.');">
+                        <?php echo csrf_field(); ?>
                         <input type="hidden" name="reset_user_id" value="<?php echo (int) $row["id"]; ?>">
                         <button type="submit" class="btn btn-sm btn-outline-danger">Reset password</button>
                     </form>
