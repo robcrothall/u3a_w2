@@ -30,6 +30,7 @@ require APP_DIR . "/templates/header.php";
     <p>
         <a class="btn btn-primary" href="/admin/event_edit.php">Add an event</a>
         <a class="btn btn-outline-secondary" href="/events.php">View public Events page</a>
+        <a class="btn btn-outline-secondary" href="/admin/recording_log.php">Recording usage</a>
     </p>
 
     <?php if (empty($events)): ?>

@@ -1,27 +1,8 @@
 <?php
 require __DIR__ . "/_app_path.php";
 require APP_DIR . "/config/config.php";
-require_login();
 
 $page_title = "Recordings";
-
-if (!can_view_recordings()) {
-    require APP_DIR . "/templates/header.php";
-    ?>
-<div class="container mt-4" style="max-width: 720px;">
-    <h1>Recordings of Presentations</h1>
-    <div class="alert alert-info">
-        Recordings are a benefit for paid-up U3A members. If you are a member and your
-        membership payment has been received, please contact
-        <a href="mailto:membership@u3aportalfred.org.za">membership@u3aportalfred.org.za</a>
-        so we can update your account.
-    </div>
-    <p>Membership details are on the <a href="/#membership">home page</a>.</p>
-</div>
-    <?php
-    require APP_DIR . "/templates/footer.php";
-    exit;
-}
 
 $per_page = 20;
 $page = max(1, (int) ($_GET["page"] ?? 1));

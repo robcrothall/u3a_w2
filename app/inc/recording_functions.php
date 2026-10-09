@@ -4,7 +4,8 @@
  * recording_functions.php
  *
  * Recordings and related documents are rows in `presentation_files`, each
- * attached to a presentation (event). Only members may open them.
+ * attached to a presentation (event). Anyone may open them; each open is logged
+ * (user id, or NULL = "Visitor" when not logged in).
  */
 
 const FILE_TYPES = [
@@ -14,24 +15,6 @@ const FILE_TYPES = [
     "article" => "Article",
     "other" => "Other",
 ];
-
-/**
- * Who may see recordings: admins and paid-up members. To open recordings to
- * every registered user, add "registered" to the list below.
- */
-function can_view_recordings(): bool
-{
-    if (empty($_SESSION["id"])) {
-        return false;
-    }
-    $user_id = (int) $_SESSION["id"];
-    foreach (["admin", "paid_up"] as $role) {
-        if (user_has_role($user_id, $role)) {
-            return true;
-        }
-    }
-    return false;
-}
 
 /** Past, published presentations that have at least one file. */
 function recordings_events(int $limit, int $offset): array
@@ -123,7 +106,36 @@ function file_delete(int $id): void
     query("DELETE FROM presentation_files WHERE id = ?", $id);
 }
 
-function log_file_access(int $file_id, int $user_id): void
+function log_file_access(int $file_id, ?int $user_id): void
 {
     query("INSERT INTO file_access_log (file_id, user_id) VALUES (?, ?)", $file_id, $user_id);
+}
+
+/** Opens per file (all time), for the staff report. */
+function file_access_totals(): array
+{
+    return query(
+        "SELECT p.presentation_date, p.presenter_name, f.id, f.link_text,
+                COUNT(l.id) AS opens,
+                SUM(l.user_id IS NULL) AS visitor_opens
+         FROM presentation_files f
+         JOIN presentations p ON p.id = f.presentation_id
+         LEFT JOIN file_access_log l ON l.file_id = f.id
+         GROUP BY f.id, p.presentation_date, p.presenter_name, f.link_text
+         ORDER BY p.presentation_date DESC, f.sort_order, f.id"
+    );
+}
+
+/** Most recent opens; users who were not logged in show as "Visitor". */
+function file_access_recent(int $limit = 100): array
+{
+    return query(
+        "SELECT l.accessed, f.link_text, p.presenter_name,
+                COALESCE(CONCAT(u.first_name, ' ', u.surname), 'Visitor') AS who
+         FROM file_access_log l
+         LEFT JOIN presentation_files f ON f.id = l.file_id
+         LEFT JOIN presentations p ON p.id = f.presentation_id
+         LEFT JOIN users u ON u.id = l.user_id
+         ORDER BY l.id DESC LIMIT " . (int) $limit
+    );
 }
