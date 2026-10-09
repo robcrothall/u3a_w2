@@ -22,19 +22,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     [$errors, $clean] = payment_validate($_POST);
     if (empty($errors)) {
-        $member = find_user_by_id($clean["user_id"]);
+        $member = member_find($clean["user_id"]);
         $updated = payment_save($clean, (int) $_SESSION["id"]);
+        $partners = member_partner_names($member);
         flash_set(($updated ? "Payment corrected for " : "Payment recorded for ")
-            . $member["first_name"] . " " . $member["surname"] . " (" . $clean["year"] . ").");
+            . $member["first_name"] . " " . $member["surname"]
+            . ($partners !== "" ? " and " . $partners : "") . " (" . $clean["year"] . ").");
         redirect("/admin/payments.php?year=" . $clean["year"]);
     }
     $year = $clean["year"] >= 2020 ? $clean["year"] : $year;
 }
 
 $results = $search !== "" ? members_search($search) : [];
-$payments = payments_for_year($year);
+$paid = paid_up_members($year);
 $total = 0.0;
-foreach ($payments as $p) {
+foreach ($paid as $p) {
     $total += (float) $p["amount"];
 }
 $flash = flash_get();
@@ -81,17 +83,28 @@ require APP_DIR . "/templates/header.php";
             <thead><tr><th>Member</th><th>Amount (R)</th><th>Date paid</th><th></th></tr></thead>
             <tbody>
                 <?php foreach ($results as $m): ?>
-                <?php $already = payment_find((int) $m["id"], $year); ?>
+                <?php
+                $already = payment_find((int) $m["id"], $year);
+                $paidUp = is_paid_up((int) $m["id"], $year);
+                $honorary = $m["membership_type"] === "honorary";
+                ?>
                 <tr>
                     <td>
                         <?php echo htmlspecialchars($m["first_name"] . " " . $m["surname"]); ?>
-                        <div class="text-muted small"><?php echo htmlspecialchars($m["email"]); ?></div>
-                        <?php if ($already): ?>
-                        <span class="badge bg-success">Paid <?php echo $year; ?></span>
+                        <?php if ($m["partners"] !== ""): ?>
+                        <span class="text-muted">&amp; <?php echo htmlspecialchars($m["partners"]); ?></span>
+                        <?php endif; ?>
+                        <div class="text-muted small"><?php echo htmlspecialchars((string) $m["email"]); ?></div>
+                        <span class="badge bg-secondary"><?php echo htmlspecialchars(MEMBERSHIP_TYPES[$m["membership_type"]] ?? $m["membership_type"]); ?></span>
+                        <?php if ($paidUp): ?>
+                        <span class="badge bg-success"><?php echo $honorary ? "Paid-up for life" : "Paid " . $year; ?></span>
                         <?php endif; ?>
                     </td>
+                    <?php if ($honorary): ?>
+                    <td colspan="3" class="text-muted">Honorary members do not pay.</td>
+                    <?php else: ?>
                     <td style="max-width: 120px;">
-                        <input type="text" inputmode="decimal" class="form-control" name="amount" placeholder="50"
+                        <input type="text" inputmode="decimal" class="form-control" name="amount" placeholder="<?php echo $m["membership_type"] === "couple" ? "80" : "50"; ?>"
                                form="pay<?php echo (int) $m["id"]; ?>"
                                value="<?php echo $already ? htmlspecialchars((string) $already["amount"]) : ""; ?>">
                     </td>
@@ -112,6 +125,7 @@ require APP_DIR . "/templates/header.php";
                             </button>
                         </form>
                     </td>
+                    <?php endif; ?>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -122,33 +136,36 @@ require APP_DIR . "/templates/header.php";
 
     <h2>Paid-up members for <?php echo $year; ?></h2>
     <p>
-        <strong><?php echo count($payments); ?></strong> paid-up<?php echo count($payments) === 1 ? " member" : " members"; ?>,
-        total received R<?php echo number_format($total, 2); ?>.
+        <strong><?php echo count($paid); ?></strong> paid-up<?php echo count($paid) === 1 ? " member" : " members"; ?>
+        (including honorary members and partners), total received R<?php echo number_format($total, 2); ?>.
         <a class="btn btn-sm btn-outline-secondary ms-2" href="/admin/door_list.php?year=<?php echo $year; ?>">Door list</a>
         <a class="btn btn-sm btn-outline-secondary" href="/admin/members_export.php?scope=paid&amp;year=<?php echo $year; ?>">Export paid-up (CSV)</a>
         <a class="btn btn-sm btn-outline-secondary" href="/admin/members_export.php?scope=all">Export all members (CSV)</a>
     </p>
 
-    <?php if (empty($payments)): ?>
+    <?php if (empty($paid)): ?>
     <p><em>No payments recorded for <?php echo $year; ?> yet.</em></p>
     <?php else: ?>
     <div class="table-responsive">
     <table class="table table-striped align-middle">
-        <thead><tr><th>Member</th><th class="text-end">Amount</th><th>Date paid</th><th>Recorded by</th><th></th></tr></thead>
+        <thead><tr><th>Member</th><th>Membership</th><th class="text-end">Amount</th><th>Date paid</th><th>Recorded by</th><th></th></tr></thead>
         <tbody>
-            <?php foreach ($payments as $p): ?>
+            <?php foreach ($paid as $p): ?>
             <tr>
-                <td><?php echo htmlspecialchars($p["surname"] . ", " . $p["first_name"]); ?></td>
+                <td><a href="/admin/member_edit.php?id=<?php echo (int) $p["id"]; ?>"><?php echo htmlspecialchars($p["surname"] . ", " . $p["first_name"]); ?></a></td>
+                <td><?php echo htmlspecialchars(ucfirst($p["membership_type"])); ?></td>
                 <td class="text-end"><?php echo $p["amount"] !== null ? "R" . number_format((float) $p["amount"], 2) : "&ndash;"; ?></td>
-                <td><?php echo htmlspecialchars($p["paid_date"]); ?></td>
-                <td><?php echo htmlspecialchars($p["recorder"] ?? ""); ?></td>
+                <td><?php echo $p["payment_id"] === null ? "Honorary" : htmlspecialchars($p["paid_date"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $p["recorder"]); ?></td>
                 <td class="text-end">
-                    <form method="post" onsubmit="return confirm('Remove this payment? The member will no longer be paid-up for <?php echo $year; ?>.');">
+                    <?php if ($p["payment_id"] !== null): ?>
+                    <form method="post" onsubmit="return confirm('Remove this payment? The member (and any partner) will no longer be paid-up for <?php echo $year; ?>.');">
                         <?php echo csrf_field(); ?>
                         <input type="hidden" name="year" value="<?php echo $year; ?>">
-                        <input type="hidden" name="delete_payment_id" value="<?php echo (int) $p["id"]; ?>">
+                        <input type="hidden" name="delete_payment_id" value="<?php echo (int) $p["payment_id"]; ?>">
                         <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
                     </form>
+                    <?php endif; ?>
                 </td>
             </tr>
             <?php endforeach; ?>

@@ -13,7 +13,7 @@
  */
 function find_user_by_email(string $email): ?array
 {
-    $rows = query("SELECT * FROM users WHERE email = ?", $email);
+    $rows = query("SELECT * FROM users WHERE email = ? OR email2 = ?", $email, $email);
     return $rows[0] ?? null;
 }
 

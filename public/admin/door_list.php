@@ -4,7 +4,7 @@ require APP_DIR . "/config/config.php";
 require_role("admin");
 
 $year = payment_year();
-$payments = payments_for_year($year);
+$payments = paid_up_members($year);
 
 $page_title = "Door list " . $year;
 require APP_DIR . "/templates/header.php";

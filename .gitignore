@@ -10,3 +10,11 @@ public/uploads/*
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Member data - never commit (personal information)
+import_review/
+*.tsv
+members_review.csv
+import_members.sql
+u3a-port-alfred_*GoogleGroups*.csv
+U3A_Members_*.xlsx

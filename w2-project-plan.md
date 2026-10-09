@@ -157,3 +157,20 @@ can register." For w2:
 - Committee-only notes/minutes page
 
 Nothing above is built yet — just recorded so it isn't lost.
+
+## Memberships, couples and the member import (added 2026-10-09)
+
+- A **membership** is what pays and is paid-up: `individual` (R50, one person),
+  `couple` (R80, two people, linked) or `honorary` (paid-up for life, the person
+  and their partner). `users.membership_id` links people to it (NULL = individual).
+  Migration `004_memberships_and_member_details.sql`.
+- Paying for a couple records one payment and marks **both** partners paid-up
+  (the partner's row has no amount). Honorary members always count as paid-up.
+- Staff pages: Admin > Members (edit details, change type, link/unlink a partner),
+  Admin > Membership payments, Door list, member CSV export.
+- Members imported from the old spreadsheet + Google Groups list have no usable
+  password. They need a "set your password by email" flow before they can log in
+  (not built yet). Imported accounts have `must_change_password = 1`.
+- `tools/import_members.php` builds a review CSV + issues list + SQL from the
+  sheet and the Google Groups export. Outputs hold personal data and live OUTSIDE
+  the repo. `tools/xlsx_to_tsv.ps1` converts the workbook for it.

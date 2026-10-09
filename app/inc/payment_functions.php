@@ -3,13 +3,19 @@
 /**
  * payment_functions.php
  *
- * Membership payments: one row per member per membership year
+ * Membership payments: one row per person per membership year
  * (membership_payments, unique on user_id + year). The membership year is
- * the calendar year. "Paid-up" is computed from these rows - it is not a
- * flag anyone maintains by hand.
+ * the calendar year. "Paid-up" is computed - nobody maintains a flag:
+ *
+ *   - individual: paid-up if they have a payment row for the year
+ *   - couple:     when one partner pays, BOTH get a payment row (the partner's
+ *                 row has no amount), so both are paid-up
+ *   - honorary:   paid-up for life, no payment needed
+ *
+ * A user with no membership (users.membership_id NULL) counts as an individual.
  */
 
-const MEMBERSHIP_FEE_HINT = "Annual membership: individuals R50, couples R80 (record a payment for each partner).";
+const MEMBERSHIP_FEE_HINT = "Annual membership: individuals R50, couples R80 (record it once - a partner is marked paid-up automatically).";
 
 /** The membership year to show: ?year= if sensible, else the current year. */
 function payment_year(): int
@@ -25,25 +31,38 @@ function payment_year_choices(): array
     return range((int) date("Y") + 1, 2020);
 }
 
-/** Members whose name or email matches the search text. */
+/** Members whose name or email matches the search text, with their membership details. */
 function members_search(string $search, int $limit = 25): array
 {
     $like = "%" . $search . "%";
-    return query(
-        "SELECT id, first_name, surname, given_name, email FROM users
-         WHERE email LIKE ? OR surname LIKE ? OR first_name LIKE ? OR given_name LIKE ?
-         ORDER BY surname, first_name LIMIT " . (int) $limit,
+    $rows = query(
+        "SELECT u.id, u.first_name, u.surname, u.given_name, u.email, u.email2, u.phone, u.membership_id,
+                COALESCE(m.membership_type, 'individual') AS membership_type
+         FROM users u LEFT JOIN memberships m ON m.id = u.membership_id
+         WHERE u.email LIKE ? OR u.email2 LIKE ? OR u.surname LIKE ? OR u.first_name LIKE ? OR u.given_name LIKE ?
+         ORDER BY u.surname, u.first_name LIMIT " . (int) $limit,
+        $like,
         $like,
         $like,
         $like,
         $like
     );
+    foreach ($rows as &$row) {
+        $row["partners"] = member_partner_names($row);
+    }
+    unset($row);
+    return $rows;
 }
 
 /** All registered members, for the export. */
 function members_all(): array
 {
-    return query("SELECT id, first_name, surname, given_name, email FROM users ORDER BY surname, first_name");
+    return query(
+        "SELECT u.id, u.first_name, u.surname, u.given_name, u.email, u.email2, u.phone, u.address,
+                COALESCE(m.membership_type, 'individual') AS membership_type
+         FROM users u LEFT JOIN memberships m ON m.id = u.membership_id
+         ORDER BY u.surname, u.first_name"
+    );
 }
 
 function payment_find(int $user_id, int $year): ?array
@@ -58,16 +77,35 @@ function payment_find_by_id(int $id): ?array
     return $rows[0] ?? null;
 }
 
-/** Payments for a year, with member names, ordered by surname. */
-function payments_for_year(int $year): array
+/** User ids in the same membership as this user (always includes the user). */
+function household_user_ids(int $user_id): array
+{
+    $rows = query(
+        "SELECT u2.id FROM users u
+         JOIN users u2 ON u2.membership_id = u.membership_id
+         WHERE u.id = ? AND u.membership_id IS NOT NULL",
+        $user_id
+    );
+    $ids = array_map(fn($r) => (int) $r["id"], $rows);
+    return $ids ?: [$user_id];
+}
+
+/**
+ * Everyone who is paid-up for a year: those with a payment row, plus honorary
+ * members. Ordered by surname. payment_id is NULL for honorary members.
+ */
+function paid_up_members(int $year): array
 {
     return query(
-        "SELECT p.*, u.first_name, u.surname, u.given_name, u.email,
+        "SELECT u.id, u.first_name, u.surname, u.given_name, u.email, u.email2, u.phone, u.address,
+                COALESCE(m.membership_type, 'individual') AS membership_type,
+                p.id AS payment_id, p.amount, p.paid_date, p.recorded_by,
                 CONCAT(r.first_name, ' ', r.surname) AS recorder
-         FROM membership_payments p
-         JOIN users u ON u.id = p.user_id
+         FROM users u
+         LEFT JOIN memberships m ON m.id = u.membership_id
+         LEFT JOIN membership_payments p ON p.user_id = u.id AND p.year = ?
          LEFT JOIN users r ON r.id = p.recorded_by
-         WHERE p.year = ?
+         WHERE p.id IS NOT NULL OR m.membership_type = 'honorary'
          ORDER BY u.surname, u.first_name",
         $year
     );
@@ -75,7 +113,16 @@ function payments_for_year(int $year): array
 
 function is_paid_up(int $user_id, ?int $year = null): bool
 {
-    return payment_find($user_id, $year ?? (int) date("Y")) !== null;
+    $year = $year ?? (int) date("Y");
+    $rows = query(
+        "SELECT 1 FROM users u
+         LEFT JOIN memberships m ON m.id = u.membership_id
+         LEFT JOIN membership_payments p ON p.user_id = u.id AND p.year = ?
+         WHERE u.id = ? AND (p.id IS NOT NULL OR m.membership_type = 'honorary')",
+        $year,
+        $user_id
+    );
+    return count($rows) > 0;
 }
 
 /** Validates the record-payment form. Returns [array $errors, array $clean]. */
@@ -116,8 +163,28 @@ function payment_validate(array $input): array
 }
 
 /**
- * Records a payment, or corrects the existing one for that member and year.
- * Returns true if an existing payment was updated.
+ * Gives every other person in the same membership a payment row for the year
+ * (no amount) if they do not have one yet, so a couple is paid-up together.
+ */
+function payment_sync_household(int $user_id, int $year, string $paid_date): void
+{
+    foreach (household_user_ids($user_id) as $other) {
+        if ($other !== $user_id && payment_find($other, $year) === null) {
+            query(
+                "INSERT INTO membership_payments (user_id, year, amount, paid_date, recorded_by)
+                 VALUES (?, ?, NULL, ?, NULL)",
+                $other,
+                $year,
+                $paid_date
+            );
+        }
+    }
+}
+
+/**
+ * Records a payment, or corrects the existing one for that member and year,
+ * and marks their partner paid-up too. Returns true if an existing payment
+ * was updated.
  */
 function payment_save(array $p, int $recorded_by): bool
 {
@@ -130,23 +197,31 @@ function payment_save(array $p, int $recorded_by): bool
             $recorded_by,
             $existing["id"]
         );
-        return true;
+    } else {
+        query(
+            "INSERT INTO membership_payments (user_id, year, amount, paid_date, recorded_by)
+             VALUES (?, ?, ?, ?, ?)",
+            $p["user_id"],
+            $p["year"],
+            $p["amount"],
+            $p["paid_date"],
+            $recorded_by
+        );
     }
-    query(
-        "INSERT INTO membership_payments (user_id, year, amount, paid_date, recorded_by)
-         VALUES (?, ?, ?, ?, ?)",
-        $p["user_id"],
-        $p["year"],
-        $p["amount"],
-        $p["paid_date"],
-        $recorded_by
-    );
-    return false;
+    payment_sync_household($p["user_id"], $p["year"], $p["paid_date"]);
+    return $existing !== null;
 }
 
+/** Removes a payment and the matching rows of the person's partner for that year. */
 function payment_delete(int $id): void
 {
-    query("DELETE FROM membership_payments WHERE id = ?", $id);
+    $payment = payment_find_by_id($id);
+    if ($payment === null) {
+        return;
+    }
+    foreach (household_user_ids((int) $payment["user_id"]) as $uid) {
+        query("DELETE FROM membership_payments WHERE user_id = ? AND year = ?", $uid, $payment["year"]);
+    }
 }
 
 /**

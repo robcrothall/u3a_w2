@@ -67,7 +67,7 @@ require APP_DIR . "/templates/header.php";
             <?php foreach ($results as $row): ?>
             <tr>
                 <td><?php echo htmlspecialchars($row["first_name"] . " " . $row["surname"]); ?></td>
-                <td><?php echo htmlspecialchars($row["email"]); ?></td>
+                <td><?php echo htmlspecialchars((string) $row["email"]); ?></td>
                 <td class="text-end">
                     <form method="post" onsubmit="return confirm('Reset the password for this member? They will need a new temporary password from you to log in.');">
                         <?php echo csrf_field(); ?>
