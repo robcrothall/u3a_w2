@@ -32,3 +32,4 @@ require_once dirname(__DIR__) . "/inc/functions.php";
 require_once dirname(__DIR__) . "/inc/auth_functions.php";
 require_once dirname(__DIR__) . "/inc/event_functions.php";
 require_once dirname(__DIR__) . "/inc/recording_functions.php";
+require_once dirname(__DIR__) . "/inc/payment_functions.php";

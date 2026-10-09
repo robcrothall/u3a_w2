@@ -44,8 +44,18 @@ $nav_is_admin = $nav_logged_in && user_has_role((int) $_SESSION["id"], "admin");
                     <?php else: ?>
                     <li class="nav-item"><a class="nav-link" href="/change_password.php">Change password</a></li>
                     <?php if ($nav_is_admin): ?>
-                    <li class="nav-item"><a class="nav-link" href="/admin/events.php">Manage events</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/admin/reset_password.php">Reset member password</a></li>
+                    <li class="nav-item dropdown">
+                      <a class="nav-link dropdown-toggle" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Admin</a>
+                      <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenu">
+                        <li><a class="dropdown-item" href="/admin/events.php">Manage events</a></li>
+                        <li><a class="dropdown-item" href="/admin/payments.php">Membership payments</a></li>
+                        <li><a class="dropdown-item" href="/admin/door_list.php">Door list</a></li>
+                        <li><a class="dropdown-item" href="/admin/members_export.php?scope=all">Export members (CSV)</a></li>
+                        <li><a class="dropdown-item" href="/admin/recording_log.php">Recording usage</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/admin/reset_password.php">Reset member password</a></li>
+                      </ul>
+                    </li>
                     <?php endif; ?>
                     <li class="nav-item"><a class="nav-link" href="/logout.php">Log off</a></li>
                     <?php endif; ?>
