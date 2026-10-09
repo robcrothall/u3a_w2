@@ -30,7 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 require APP_DIR . "/templates/header.php";
 ?>
-<div class="container mt-5" style="max-width: 420px;">
+<div class="container mt-4" style="max-width: 420px;">
     <h1>Log in</h1>
 
     <?php foreach ($errors as $error): ?>

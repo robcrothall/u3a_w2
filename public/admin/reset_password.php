@@ -28,7 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && !empty($_POST["reset_user_id"])) {
 
 require APP_DIR . "/templates/header.php";
 ?>
-<div class="container mt-5">
+<div class="container mt-4">
     <h1>Reset a Member's Password</h1>
 
     <?php if ($temp_password !== null && $reset_user !== null): ?>

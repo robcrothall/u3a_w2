@@ -42,7 +42,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 require APP_DIR . "/templates/header.php";
 ?>
-<div class="container mt-5" style="max-width: 480px;">
+<div class="container mt-4" style="max-width: 480px;">
     <h1>Register</h1>
     <p class="text-muted">Registering adds you to our mailing list for newsletters and meeting reminders.</p>
 
