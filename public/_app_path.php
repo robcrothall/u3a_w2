@@ -23,6 +23,7 @@ foreach ($candidates as $candidate) {
         break;
     }
 }
+define("PUBLIC_DIR", __DIR__);   // folder served by the web server (for uploads)
 if (!defined("APP_DIR")) {
     http_response_code(500);
     exit("Application folder not found.");

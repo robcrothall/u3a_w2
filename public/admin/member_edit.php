@@ -33,6 +33,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = membership_link($id, (int) ($_POST["partner_id"] ?? 0));
         flash_set($error ?? "Partner linked. Their payments are now shared.", $error ? "danger" : "success");
         redirect($self);
+    } elseif ($action === "set_admin") {
+        $grant = ($_POST["admin"] ?? "") === "1";
+        if (!$grant && $id === (int) $_SESSION["id"]) {
+            flash_set("You cannot remove your own admin role (so the site is never left without an admin).", "danger");
+        } elseif ($grant && empty($member["email"])) {
+            flash_set("An admin needs an email address to log in. Add one first.", "danger");
+        } else {
+            if ($grant) {
+                assign_role($id, "admin");
+            } else {
+                revoke_role($id, "admin");
+            }
+            flash_set($grant ? "Admin role granted." : "Admin role removed.");
+        }
+        redirect($self);
+    } elseif ($action === "send_password") {
+        if (empty($member["email"])) {
+            flash_set("This member has no email address.", "danger");
+        } elseif (send_password_email($member, "invite")) {
+            flash_set("An email with a link to set a password was sent to " . $member["email"] . ".");
+        } else {
+            flash_set("The email could not be sent. Please try again later.", "danger");
+        }
+        redirect($self);
     } elseif ($action === "delete") {
         $error = member_delete($id, (int) $_SESSION["id"]);
         if ($error !== null) {
@@ -170,6 +194,34 @@ require APP_DIR . "/templates/header.php";
     </form>
     <?php endforeach; ?>
     <?php endif; ?>
+
+    <h2 class="h4 mt-5">Login and role</h2>
+    <?php $isAdminUser = user_has_role($id, "admin"); ?>
+    <p>
+        Login: <?php echo $member["password_hash"] === "!" ? "<strong>no password set yet</strong>" : "password set"; ?>
+        <?php echo $member["last_logon"] ? "(last logged in " . htmlspecialchars($member["last_logon"]) . ")" : "(never logged in)"; ?>
+    </p>
+    <?php if (!empty($member["email"])): ?>
+    <form method="post" class="mb-3">
+        <?php echo csrf_field(); ?>
+        <input type="hidden" name="id" value="<?php echo $id; ?>">
+        <input type="hidden" name="action" value="send_password">
+        <button type="submit" class="btn btn-outline-primary">Email a link to set a password</button>
+    </form>
+    <?php endif; ?>
+    <p>
+        Role: <?php echo $isAdminUser ? '<span class="badge bg-danger">Admin</span>' : '<span class="badge bg-secondary">Member</span>'; ?>
+        <span class="text-muted small">Admins can manage members, payments, events, recordings and the home page.</span>
+    </p>
+    <form method="post" onsubmit="return confirm('<?php echo $isAdminUser ? "Remove admin rights from this member?" : "Give this member full admin rights?"; ?>');">
+        <?php echo csrf_field(); ?>
+        <input type="hidden" name="id" value="<?php echo $id; ?>">
+        <input type="hidden" name="action" value="set_admin">
+        <input type="hidden" name="admin" value="<?php echo $isAdminUser ? "0" : "1"; ?>">
+        <button type="submit" class="btn <?php echo $isAdminUser ? "btn-outline-danger" : "btn-outline-success"; ?>">
+            <?php echo $isAdminUser ? "Remove admin role" : "Make this member an admin"; ?>
+        </button>
+    </form>
 
     <h2 class="h4 mt-5">Payments</h2>
     <table class="table table-sm" style="max-width: 420px;">

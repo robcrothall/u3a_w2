@@ -47,8 +47,10 @@ $nav_is_admin = $nav_logged_in && user_has_role((int) $_SESSION["id"], "admin");
                     <li class="nav-item dropdown">
                       <a class="nav-link dropdown-toggle" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Admin</a>
                       <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenu">
+                        <li><a class="dropdown-item" href="/admin/site_content.php">Edit home page</a></li>
                         <li><a class="dropdown-item" href="/admin/events.php">Manage events</a></li>
                         <li><a class="dropdown-item" href="/admin/members.php">Members</a></li>
+                        <li><a class="dropdown-item" href="/admin/invitations.php">Password invitations</a></li>
                         <li><a class="dropdown-item" href="/admin/payments.php">Membership payments</a></li>
                         <li><a class="dropdown-item" href="/admin/door_list.php">Door list</a></li>
                         <li><a class="dropdown-item" href="/admin/members_export.php?scope=all">Export members (CSV)</a></li>

@@ -25,6 +25,9 @@ if ($members_enabled) {
 }
 // Next three published events; the Upcoming Events section is hidden when empty.
 $home_events = $members_enabled ? events_upcoming(3) : [];
+// Staff-edited About text and committee photo; the built-in wording/photo are used until staff change them.
+$about_text = $members_enabled ? site_content_get("about_text") : "";
+$photo_url = $members_enabled ? committee_photo_url() : null;
 ?>
 <!doctype html>
 <html lang="en">
@@ -89,8 +92,10 @@ $home_events = $members_enabled ? events_upcoming(3) : [];
 <li class="nav-item dropdown">
   <a class="nav-link dropdown-toggle" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Admin</a>
   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenu">
+    <li><a class="dropdown-item" href="/admin/site_content.php">Edit home page</a></li>
     <li><a class="dropdown-item" href="/admin/events.php">Manage events</a></li>
     <li><a class="dropdown-item" href="/admin/members.php">Members</a></li>
+    <li><a class="dropdown-item" href="/admin/invitations.php">Password invitations</a></li>
     <li><a class="dropdown-item" href="/admin/payments.php">Membership payments</a></li>
     <li><a class="dropdown-item" href="/admin/door_list.php">Door list</a></li>
     <li><a class="dropdown-item" href="/admin/members_export.php?scope=all">Export members (CSV)</a></li>
@@ -130,16 +135,20 @@ $home_events = $members_enabled ? events_upcoming(3) : [];
           <div class="row align-items-center">
             <div class="col-lg-6">
               <h2>About U3A</h2>
+              <?php if ($about_text !== ""): ?>
+              <?php echo paragraphs_html($about_text); ?>
+              <?php else: ?>
               <p>The University of the Third Age is dedicated to providing educational and social opportunities for older adults. We maintain a vibrant community of learners who engage in a wide range of activities, from academic discussions to creative pursuits.</p>
               <p>Our programs are designed to foster intellectual curiosity, personal growth, and meaningful connections within our diverse membership.</p>
               <p>We welcome individuals from all walks of life to join us in celebrating lifelong learning and community engagement.</p>
               <p>Our primary activity is hosting two presentations per month, on the second and fourth Thursday of each month, at the Settlers Park Don Powis Hall. These presentations cover a variety of topics, including history, science, arts, and culture.</p>
               <p>Enjoy a cup of tea or coffee and chat before the meeting, which starts at 09h30 for 10h00.
                 The presentations are followed by a Q&amp;A session with the presenter.</p>
+              <?php endif; ?>
             </div>
             <div class="col-lg-6">
               <div class="ratio ratio-16x9">
-                <img src="img/U3A_PortAlfred_Committee_2024_v2.jpg" class="rounded shadow-sm" alt="U3A Committee"
+                <img src="<?php echo htmlspecialchars($photo_url ?? "img/U3A_PortAlfred_Committee_2024_v2.jpg"); ?>" class="rounded shadow-sm" alt="U3A Committee"
                   style="object-fit: cover; width: 100%; height: 100%;">
               </div>
             </div>

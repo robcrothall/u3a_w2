@@ -33,6 +33,9 @@ require APP_DIR . "/templates/header.php";
 <div class="container mt-4" style="max-width: 420px;">
     <h1>Log in</h1>
 
+    <?php if ($flash = flash_get()): ?>
+    <div class="alert alert-<?php echo htmlspecialchars($flash["type"]); ?>"><?php echo htmlspecialchars($flash["message"]); ?></div>
+    <?php endif; ?>
     <?php foreach ($errors as $error): ?>
     <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
     <?php endforeach; ?>
@@ -51,8 +54,7 @@ require APP_DIR . "/templates/header.php";
     </form>
 
     <p class="mt-3">
-        Forgotten your password? Contact
-        <a href="mailto:webmaster@u3aportalfred.org.za">the Webmaster</a> to have it reset.
+        <a href="/forgot_password.php">Forgotten your password, or never set one?</a>
     </p>
     <p>Not registered yet? <a href="/register.php">Register here</a>.</p>
 </div>

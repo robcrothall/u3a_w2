@@ -36,6 +36,8 @@ jobs:
             change_password.php
             logout.php
             events.php
+            forgot_password.php
+            set_password.php
             recordings.php
             recording.php
             admin/**
