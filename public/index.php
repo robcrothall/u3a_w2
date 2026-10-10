@@ -259,6 +259,13 @@ if ($members_enabled) {
             <h5>Follow Us</h5>
             <p class="mb-0">Stay connected for event updates in the newsletters,
               Talk of the Town, and The Announcer.</p>
+            <?php if ($members_enabled && $is_admin): ?>
+            <p class="mb-0 mt-3 small text-white-50">
+              Admin info: environment <strong><?php echo htmlspecialchars((string) env("APP_ENV")); ?></strong>,
+              database <strong><?php echo htmlspecialchars((string) env("DB_NAME")); ?></strong>,
+              site <?php echo htmlspecialchars((string) env("SITE_URL")); ?>
+            </p>
+            <?php endif; ?>
           </div>
         </div>
       </div>
