@@ -23,6 +23,12 @@ foreach ($candidates as $candidate) {
         break;
     }
 }
+// The test site lives in a folder named w2.<domain> inside public_html, so the live domain could also
+// reach it by path. Serve that folder only under its own host name.
+if (stripos(basename(__DIR__), "w2.") === 0 && stripos($_SERVER["HTTP_HOST"] ?? "", "w2.") !== 0) {
+    http_response_code(404);
+    exit("Not found.");
+}
 define("PUBLIC_DIR", __DIR__);   // folder served by the web server (for uploads)
 if (!defined("APP_DIR")) {
     http_response_code(500);
