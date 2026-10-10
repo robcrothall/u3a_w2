@@ -266,3 +266,54 @@ function membership_set_type(int $user_id, string $type): ?string
     query("UPDATE memberships SET membership_type = ? WHERE id = ?", $type, $mid);
     return null;
 }
+
+/**
+ * Creates a member on behalf of a person who has not registered themselves
+ * (no usable password - they must set one before they can log in).
+ * Returns the new user's id.
+ */
+function member_create(array $c, string $type = "individual"): int
+{
+    $mid = membership_create(array_key_exists($type, MEMBERSHIP_TYPES) && $type !== "couple" ? $type : "individual");
+    query(
+        "INSERT INTO users (email, email2, first_name, surname, phone, address, password_hash, must_change_password, membership_id)
+         VALUES (?, ?, ?, ?, ?, ?, '!', 1, ?)",
+        $c["email"] === "" ? null : $c["email"],
+        $c["email2"] === "" ? null : $c["email2"],
+        $c["first_name"],
+        $c["surname"],
+        $c["phone"] === "" ? null : $c["phone"],
+        $c["address"] === "" ? null : $c["address"],
+        $mid
+    );
+    $user_id = (int) $_SESSION["inserted_row_id"];
+    assign_role($user_id, "registered");
+    return $user_id;
+}
+
+/**
+ * Deletes a member and their payments and roles (e.g. a duplicate, or
+ * someone who has died). Refuses to delete yourself. Returns an error
+ * message, or null on success.
+ */
+function member_delete(int $id, int $acting_user_id): ?string
+{
+    if ($id === $acting_user_id) {
+        return "You cannot delete your own account.";
+    }
+    $u = member_find($id);
+    if ($u === null) {
+        return "Member not found.";
+    }
+    $mid = $u["membership_id"] ? (int) $u["membership_id"] : null;
+    query("DELETE FROM users WHERE id = ?", $id);
+    if ($mid !== null) {
+        $left = query("SELECT COUNT(*) AS n FROM users WHERE membership_id = ?", $mid)[0]["n"];
+        if ((int) $left === 0) {
+            membership_cleanup($mid);
+        } elseif ((int) $left === 1) {
+            query("UPDATE memberships SET membership_type = 'individual' WHERE id = ? AND membership_type = 'couple'", $mid);
+        }
+    }
+    return null;
+}

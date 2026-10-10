@@ -33,6 +33,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = membership_link($id, (int) ($_POST["partner_id"] ?? 0));
         flash_set($error ?? "Partner linked. Their payments are now shared.", $error ? "danger" : "success");
         redirect($self);
+    } elseif ($action === "delete") {
+        $error = member_delete($id, (int) $_SESSION["id"]);
+        if ($error !== null) {
+            flash_set($error, "danger");
+            redirect($self);
+        }
+        flash_set("Deleted " . $member["first_name"] . " " . $member["surname"] . ".");
+        redirect("/admin/members.php");
     } elseif ($action === "unlink") {
         $error = membership_unlink($id);
         flash_set($error ?? "Unlinked. This member is now an individual membership.", $error ? "danger" : "success");
@@ -185,6 +193,18 @@ require APP_DIR . "/templates/header.php";
         </tbody>
     </table>
     <p><a class="btn btn-outline-secondary" href="/admin/payments.php?search=<?php echo urlencode($member["surname"]); ?>">Record a payment</a></p>
+
+    <h2 class="h4 mt-5 text-danger">Delete this member</h2>
+    <p class="text-muted">
+        Use this for duplicates, or for someone who has died. It removes the person and their payment
+        history. This cannot be undone.
+    </p>
+    <form method="post" onsubmit="return confirm('Delete this member and their payment history? This cannot be undone.');">
+        <?php echo csrf_field(); ?>
+        <input type="hidden" name="id" value="<?php echo $id; ?>">
+        <input type="hidden" name="action" value="delete">
+        <button type="submit" class="btn btn-outline-danger">Delete member</button>
+    </form>
 </div>
 <?php
 require APP_DIR . "/templates/footer.php";

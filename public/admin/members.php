@@ -23,6 +23,8 @@ require APP_DIR . "/templates/header.php";
     <div class="alert alert-<?php echo htmlspecialchars($flash["type"]); ?>"><?php echo htmlspecialchars($flash["message"]); ?></div>
     <?php endif; ?>
 
+    <p><a class="btn btn-primary" href="/admin/member_add.php">Add a member</a></p>
+
     <form method="get" class="row g-2 align-items-end mb-3">
         <div class="col-md-5">
             <label class="form-label" for="search">Search by name, email or phone</label>

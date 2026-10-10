@@ -29,8 +29,26 @@ if (!is_dir($outDir)) {
 const YEARS = [2024 => 8, 2025 => 9, 2026 => 10];   // year => column index in the TSV
 const PARTICLES = ["van", "von", "der", "den", "de", "da", "du", "le", "la", "di", "del", "ten", "ter", "op", "'t"];
 const SPRV_FULL = "Settlers Park Retirement Village, Horton Road, Port Alfred 6170";
+$overrides = is_file("$outDir/overrides.json") ? (json_decode(file_get_contents("$outDir/overrides.json"), true) ?: []) : [];
 // Google Groups addresses that are not members (own aliases, system mailboxes): one per line in <output-dir>/skip_emails.txt
-$ggSkip = is_file("$outDir/skip_emails.txt") ? array_map("strtolower", array_filter(array_map("trim", file("$outDir/skip_emails.txt")))) : [];
+$ggSkip = [];
+if (is_file("$outDir/skip_emails.txt")) {
+    foreach (file("$outDir/skip_emails.txt") as $ln) {
+        $ln = trim($ln);
+        if ($ln === "" || !preg_match("/^(\S+@\S+)\s*(.*)$/", $ln, $m)) {
+            continue;
+        }
+        if (preg_match("/remain|keep|should be a member/i", $m[2]) && !preg_match("/\bskip\b/i", $m[2])) {
+            continue;   // note says: this one is a real member, import it
+        }
+        $ggSkip[] = strtolower($m[1]);
+    }
+}
+// overrides.json: drop_emails = wrong/unwanted addresses removed everywhere; deceased_emails = belongs to someone who has died
+$dropEmails = array_map("strtolower", $overrides["drop_emails"] ?? []);
+foreach (array_map("strtolower", $overrides["deceased_emails"] ?? []) as $de) {
+    $dropEmails[] = $de;
+}
 
 $people = [];        // id => person
 $skipped = [];       // rows not imported (deceased, ...)
@@ -346,7 +364,7 @@ foreach ($records as $r) {
     }
     [$nm, $nameFlags] = parse_names($r["nick"], $r["surname"]);
     $flags = $nameFlags;
-    $emails = parse_emails($r["email"]);
+    $emails = array_values(array_diff(parse_emails($r["email"]), $dropEmails));
     $broken = broken_email_locals($r["email"]);
     if (trim($r["email"]) !== "" && !$emails) {
         $flags[] = "email column not usable: '" . trim($r["email"]) . "'";
@@ -432,12 +450,21 @@ foreach ($pending as [$pid, $praw, $row]) {
             break;
         }
     }
+    $separate = false;
+    foreach ($overrides["separate_partners"] ?? [] as $o) {
+        if ((int) $o["row"] === $row && strcasecmp(trim($o["partner"]), $praw) === 0) {
+            $separate = true;
+        }
+    }
     if ($found === null) {
-        $found = add_person($people, $pf, $ps, ["emails" => [], "phone" => "", "address" => $me["address"], "rows" => [],
-            "flags" => ["only listed as the partner of {$me["first"]} {$me["surname"]} (row $row) - no details of their own"],
+        $found = add_person($people, $pf, $ps, ["emails" => [], "phone" => "", "address" => $separate ? "" : $me["address"], "rows" => [],
+            "flags" => [$separate ? "listed in the Partner column of {$me["first"]} {$me["surname"]} (row $row) but kept as a separate individual membership"
+                : "only listed as the partner of {$me["first"]} {$me["surname"]} (row $row) - no details of their own"],
             "pay" => [], "broken" => []]);
     }
-    hh_union($people, $pid, $found);
+    if (!$separate) {
+        hh_union($people, $pid, $found);
+    }
 }
 
 // ---------------------------------------------------------------- Google Groups
@@ -598,6 +625,10 @@ foreach ($gg as $g) {
     }
     if ($g["status"] === "invited") {
         $info[] = "invited to Google Groups, not yet joined";
+    }
+    if (in_array($g["email"], $dropEmails, true)) {
+        $issues[] = "Google Groups address ignored (removed per your notes): {$g["email"]}";
+        continue;
     }
     if (in_array($g["email"], $ggSkip, true)) {
         $issues[] = "Google Groups address skipped (own alias/system mailbox): {$g["email"]}";
@@ -771,18 +802,22 @@ foreach ($households as $root => $members) {
     $notes = [];
     foreach (YEARS as $y => $_) {
         $dates = [];
+        $payerByDate = [];
         $paidNoDate = false;
+        $firstPaidNoDate = null;
         $na = false;
         foreach ($members as $mid) {
             foreach ($people[$mid]["pay"] as $src) {
                 $res = parse_pay($src["years"][$y] ?? "", $y);
                 if ($res["type"] === "date") {
                     $dates[] = $res["date"];
+                    $payerByDate[$res["date"]] ??= $mid;
                     if (isset($res["note"])) {
                         $notes[] = "$y: " . $res["note"];
                     }
                 } elseif ($res["type"] === "paid") {
                     $paidNoDate = true;
+                    $firstPaidNoDate ??= $mid;
                     $notes[] = "$y: " . $res["note"];
                 } elseif ($res["type"] === "na") {
                     $na = true;
@@ -794,10 +829,10 @@ foreach ($households as $root => $members) {
         }
         if ($dates) {
             sort($dates);
-            $perYear[$y] = ["date" => $dates[0]];
+            $perYear[$y] = ["date" => $dates[0], "payer" => $payerByDate[$dates[0]]];
             $anyPaid = true;
         } elseif ($paidNoDate) {
-            $perYear[$y] = ["date" => "$y-01-01", "estimated" => true];
+            $perYear[$y] = ["date" => "$y-01-01", "estimated" => true, "payer" => $firstPaidNoDate];
             $notes[] = "$y: paid date unknown, set to $y-01-01";
             $anyPaid = true;
         } elseif ($na) {
@@ -805,9 +840,9 @@ foreach ($households as $root => $members) {
         }
     }
     if (!$anyPaid && $hasNa) {
-        $type = "honorary";
-        $notes[] = "all N/A and no payment recorded - treated as HONORARY, please confirm";
-    } elseif (count($members) >= 2) {
+        $notes[] = "marked N/A but no payment is recorded for this membership";
+    }
+    if (count($members) >= 2) {
         $type = "couple";
     } else {
         $type = "individual";
@@ -920,7 +955,9 @@ foreach ($households as $root => $members) {
         $sql[] = "INSERT IGNORE INTO user_roles (user_id, role_id) SELECT @u, id FROM roles WHERE role_name = 'registered';";
         foreach ($info["pay"] as $y => $v) {
             if (isset($v["date"])) {
-                $sql[] = "INSERT IGNORE INTO membership_payments (user_id, year, amount, paid_date, recorded_by) VALUES (@u, $y, NULL, '{$v["date"]}', NULL);";
+                $isPayer = ($v["payer"] ?? $members[0]) === $mid;
+                $amount = $isPayer ? (count($members) >= 2 ? "80.00" : "50.00") : "NULL";
+                $sql[] = "INSERT IGNORE INTO membership_payments (user_id, year, amount, paid_date, recorded_by) VALUES (@u, $y, $amount, '{$v["date"]}', NULL);";
                 $nPay++;
             }
         }
