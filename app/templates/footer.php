@@ -13,6 +13,13 @@
                 </div>
                 <div class="col-md-6 text-md-end">
                     <p class="mb-0 text-white-50"><?php echo htmlspecialchars(COPYRIGHT); ?> &middot; <?php echo date("Y"); ?></p>
+                    <?php if (!empty($nav_is_admin)): ?>
+                    <p class="mb-0 mt-2 small text-white-50">
+                        Admin info: environment <strong><?php echo htmlspecialchars((string) env("APP_ENV")); ?></strong>,
+                        database <strong><?php echo htmlspecialchars((string) env("DB_NAME")); ?></strong>,
+                        site <?php echo htmlspecialchars((string) env("SITE_URL")); ?>
+                    </p>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

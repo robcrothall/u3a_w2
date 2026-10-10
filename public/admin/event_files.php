@@ -13,6 +13,24 @@ if ($event === null) {
 $errors = [];
 $form = ["link_text" => "", "url" => "", "file_type" => "video", "sort_order" => 0];
 
+// ?edit=<file id> loads an existing link into the form so it can be changed
+$editing = null;
+$edit_id = (int) ($_GET["edit"] ?? $_POST["file_id"] ?? 0);
+if ($edit_id > 0) {
+    $editing = file_find($edit_id);
+    if ($editing !== null && (int) $editing["presentation_id"] !== $event_id) {
+        $editing = null;
+    }
+    if ($editing !== null) {
+        $form = [
+            "link_text" => $editing["link_text"],
+            "url" => $editing["url"],
+            "file_type" => $editing["file_type"],
+            "sort_order" => (int) $editing["sort_order"],
+        ];
+    }
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     csrf_check();
     if (!empty($_POST["delete_file_id"])) {
@@ -26,15 +44,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     [$errors, $form] = file_validate($_POST);
     if (empty($errors)) {
-        file_create($event_id, $form);
-        flash_set("Added: " . $form["link_text"]);
+        if ($editing !== null) {
+            file_update((int) $editing["id"], $form);
+            flash_set("Updated: " . $form["link_text"]);
+        } else {
+            file_create($event_id, $form);
+            flash_set("Added: " . $form["link_text"]);
+        }
         redirect("/admin/event_files.php?event_id=" . $event_id);
     }
 }
 
 $files = event_files($event_id);
 $flash = flash_get();
-if (empty($errors) && $_SERVER["REQUEST_METHOD"] !== "POST") {
+if (empty($errors) && $_SERVER["REQUEST_METHOD"] !== "POST" && $editing === null) {
     // Suggest the next position in the list for a new link.
     $form["sort_order"] = count($files) + 1;
 }
@@ -69,8 +92,9 @@ require APP_DIR . "/templates/header.php";
                 <td><?php echo htmlspecialchars($file["link_text"]); ?></td>
                 <td><?php echo htmlspecialchars(FILE_TYPES[$file["file_type"]] ?? "Other"); ?></td>
                 <td class="text-break"><a href="<?php echo htmlspecialchars($file["url"]); ?>" target="_blank" rel="noopener">Open</a></td>
-                <td class="text-end">
-                    <form method="post" onsubmit="return confirm('Remove this link? The file itself in Google Drive is not deleted.');">
+                <td class="text-end text-nowrap">
+                    <a class="btn btn-sm btn-outline-primary" href="/admin/event_files.php?event_id=<?php echo $event_id; ?>&amp;edit=<?php echo (int) $file["id"]; ?>">Edit</a>
+                    <form method="post" class="d-inline" onsubmit="return confirm('Remove this link? The file itself in Google Drive is not deleted.');">
                         <?php echo csrf_field(); ?>
                         <input type="hidden" name="event_id" value="<?php echo $event_id; ?>">
                         <input type="hidden" name="delete_file_id" value="<?php echo (int) $file["id"]; ?>">
@@ -83,7 +107,7 @@ require APP_DIR . "/templates/header.php";
     </table>
     <?php endif; ?>
 
-    <h2 class="mt-4">Add a link</h2>
+    <h2 class="mt-4"><?php echo $editing !== null ? "Edit link" : "Add a link"; ?></h2>
     <p class="text-muted">
         Upload the file to Google Drive (or similar), set sharing to "Anyone with the link can view",
         then paste its address here.
@@ -91,6 +115,9 @@ require APP_DIR . "/templates/header.php";
     <form method="post" novalidate>
         <?php echo csrf_field(); ?>
         <input type="hidden" name="event_id" value="<?php echo $event_id; ?>">
+        <?php if ($editing !== null): ?>
+        <input type="hidden" name="file_id" value="<?php echo (int) $editing["id"]; ?>">
+        <?php endif; ?>
         <div class="mb-3">
             <label class="form-label" for="link_text">Text to show</label>
             <input type="text" class="form-control" id="link_text" name="link_text" maxlength="255"
@@ -116,7 +143,10 @@ require APP_DIR . "/templates/header.php";
                        value="<?php echo (int) $form["sort_order"]; ?>">
             </div>
         </div>
-        <button type="submit" class="btn btn-primary">Add link</button>
+        <button type="submit" class="btn btn-primary"><?php echo $editing !== null ? "Save changes" : "Add link"; ?></button>
+        <?php if ($editing !== null): ?>
+        <a class="btn btn-outline-secondary" href="/admin/event_files.php?event_id=<?php echo $event_id; ?>">Cancel</a>
+        <?php endif; ?>
         <a class="btn btn-outline-secondary" href="/admin/events.php">Back to events</a>
     </form>
 </div>

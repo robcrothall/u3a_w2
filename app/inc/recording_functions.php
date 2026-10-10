@@ -101,6 +101,18 @@ function file_create(int $event_id, array $f): void
     );
 }
 
+function file_update(int $id, array $f): void
+{
+    query(
+        "UPDATE presentation_files SET url = ?, link_text = ?, file_type = ?, sort_order = ? WHERE id = ?",
+        $f["url"],
+        $f["link_text"],
+        $f["file_type"],
+        $f["sort_order"],
+        $id
+    );
+}
+
 function file_delete(int $id): void
 {
     query("DELETE FROM presentation_files WHERE id = ?", $id);
