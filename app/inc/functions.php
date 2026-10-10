@@ -14,12 +14,9 @@
  * of result rows, or false on (non-fatal) error. DB credentials come from
  * .env via env(), never hardcoded.
  */
-function query(/* $sql [, ...params] */)
+function db_connect(bool $fatal = true): ?PDO
 {
     static $handle;
-
-    $sql = func_get_arg(0);
-    $parameters = array_slice(func_get_args(), 1);
 
     if (!isset($handle)) {
         try {
@@ -28,10 +25,22 @@ function query(/* $sql [, ...params] */)
             $handle->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
             $handle->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (Exception $e) {
-            trigger_error($e->getMessage(), E_USER_ERROR);
-            exit;
+            if ($fatal) {
+                trigger_error($e->getMessage(), E_USER_ERROR);
+                exit;
+            }
+            error_log("db_connect: " . $e->getMessage());
+            return null;
         }
     }
+    return $handle;
+}
+
+function query(/* $sql [, ...params] */)
+{
+    $sql = func_get_arg(0);
+    $parameters = array_slice(func_get_args(), 1);
+    $handle = db_connect(true);
 
     $statement = $handle->prepare($sql);
     $results = $statement->execute($parameters);

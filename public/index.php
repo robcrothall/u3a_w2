@@ -17,17 +17,42 @@
 $members_enabled = is_file(__DIR__ . "/login.php");
 $logged_in = false;
 $is_admin = false;
+$home_events = [];
+$about_text = "";
+$photo_url = null;
 if ($members_enabled) {
+    // The home page must always render. If .env is missing or the database is down, fall back to
+    // the static page (no member menu, built-in text and photo) instead of showing an error.
     require __DIR__ . "/_app_path.php";
-    require APP_DIR . "/config/config.php";
-    $logged_in = !empty($_SESSION["id"]);
-    $is_admin = $logged_in && user_has_role((int) $_SESSION["id"], "admin");
+    $envFile = getenv("U3A_ENV_PATH") ?: dirname(APP_DIR) . "/.env";
+    if (!is_readable($envFile)) {
+        $members_enabled = false;
+    } else {
+        require APP_DIR . "/config/config.php";
+        if (db_connect(false) === null) {
+            $members_enabled = false;
+        }
+    }
 }
-// Next three published events; the Upcoming Events section is hidden when empty.
-$home_events = $members_enabled ? events_upcoming(3) : [];
-// Staff-edited About text and committee photo; the built-in wording/photo are used until staff change them.
-$about_text = $members_enabled ? site_content_get("about_text") : "";
-$photo_url = $members_enabled ? committee_photo_url() : null;
+if ($members_enabled) {
+    try {
+        $logged_in = !empty($_SESSION["id"]);
+        $is_admin = $logged_in && user_has_role((int) $_SESSION["id"], "admin");
+        // Next three published events; the Upcoming Events section is hidden when empty.
+        $home_events = events_upcoming(3);
+        // Staff-edited About text and committee photo; built-in wording/photo are used until staff change them.
+        $about_text = site_content_get("about_text");
+        $photo_url = committee_photo_url();
+    } catch (Throwable $e) {
+        error_log("home page: " . $e->getMessage());
+        $members_enabled = false;
+        $logged_in = false;
+        $is_admin = false;
+        $home_events = [];
+        $about_text = "";
+        $photo_url = null;
+    }
+}
 ?>
 <!doctype html>
 <html lang="en">

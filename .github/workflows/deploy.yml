@@ -16,8 +16,8 @@ jobs:
         uses: actions/checkout@v4
 
       # public/ contents -> public_html/ (the web-served folder).
-      # The login/registration pages are NOT published on the live site until
-      # go-live; remove them from the exclude list below at that point.
+      # Everything in public/ is published, including the member and admin pages.
+      # (index.php falls back to the plain static page if .env or the database is unavailable.)
       - name: Deploy public/ to public_html
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -31,16 +31,6 @@ jobs:
           exclude: |
             **/uploads/**
             **/.git*
-            login.php
-            register.php
-            change_password.php
-            logout.php
-            events.php
-            forgot_password.php
-            set_password.php
-            recordings.php
-            recording.php
-            admin/**
 
       # app/ -> app/ (outside public_html - not web-accessible)
       - name: Deploy app/ to home directory

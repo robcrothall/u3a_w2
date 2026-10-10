@@ -45,6 +45,7 @@ if (is_file("$outDir/skip_emails.txt")) {
     }
 }
 // overrides.json: drop_emails = wrong/unwanted addresses removed everywhere; deceased_emails = belongs to someone who has died
+$adminEmails = array_map("strtolower", $overrides["admin_emails"] ?? []);   // these people get the admin role
 $dropEmails = array_map("strtolower", $overrides["drop_emails"] ?? []);
 foreach (array_map("strtolower", $overrides["deceased_emails"] ?? []) as $de) {
     $dropEmails[] = $de;
@@ -953,6 +954,12 @@ foreach ($households as $root => $members) {
             $sql[] = "SET @u = LAST_INSERT_ID();";
         }
         $sql[] = "INSERT IGNORE INTO user_roles (user_id, role_id) SELECT @u, id FROM roles WHERE role_name = 'registered';";
+        foreach ($p["emails"] as $pe) {
+            if (in_array($pe, $adminEmails, true)) {
+                $sql[] = "INSERT IGNORE INTO user_roles (user_id, role_id) SELECT @u, id FROM roles WHERE role_name = 'admin';";
+                break;
+            }
+        }
         foreach ($info["pay"] as $y => $v) {
             if (isset($v["date"])) {
                 $isPayer = ($v["payer"] ?? $members[0]) === $mid;
