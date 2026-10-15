@@ -3,11 +3,19 @@ require __DIR__ . "/_app_path.php";
 require APP_DIR . "/config/config.php";
 
 $category = trim((string) ($_GET["category"] ?? ""));
-$categories = resource_categories();
-if ($category !== "" && !in_array($category, $categories, true)) {
-    $category = "";
+$not_ready = false;
+try {
+    $categories = resource_categories();
+    if ($category !== "" && !in_array($category, $categories, true)) {
+        $category = "";
+    }
+    $items = resources_for_viewer($category);
+} catch (Throwable $e) {
+    error_log("resources: " . $e->getMessage());
+    $categories = [];
+    $items = [];
+    $not_ready = true;       // table not created yet: show a friendly page, not an error
 }
-$items = resources_for_viewer($category);
 $is_admin = !empty($_SESSION["id"]) && user_has_role((int) $_SESSION["id"], "admin");
 
 $page_title = "Resources";
@@ -36,7 +44,9 @@ require APP_DIR . "/templates/header.php";
     </p>
     <?php endif; ?>
 
-    <?php if (empty($items)): ?>
+    <?php if ($not_ready): ?>
+    <div class="alert alert-info">The Resources page is being set up. Please check back soon.</div>
+    <?php elseif (empty($items)): ?>
     <p><em>Nothing has been added yet.</em></p>
     <?php endif; ?>
 

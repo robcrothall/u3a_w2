@@ -3,7 +3,11 @@
 require __DIR__ . "/_app_path.php";
 require APP_DIR . "/config/config.php";
 
-$r = resource_find((int) ($_GET["id"] ?? 0));
+try {
+    $r = resource_find((int) ($_GET["id"] ?? 0));
+} catch (Throwable $e) {
+    $r = null;
+}
 if ($r === null || $r["kind"] !== "document" || empty($r["stored_name"])) {
     http_response_code(404);
     exit("That document was not found.");
