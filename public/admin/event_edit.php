@@ -17,6 +17,7 @@ $event = $existing ?? [
     "presentation_date" => "",
     "summary" => "",
     "status" => "published",
+    "attendance" => null,
 ];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -67,6 +68,12 @@ require APP_DIR . "/templates/header.php";
         <div class="mb-3">
             <label class="form-label" for="summary">Summary (optional)</label>
             <textarea class="form-control" id="summary" name="summary" rows="6" maxlength="5000"><?php echo htmlspecialchars($event["summary"] ?? ""); ?></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="attendance">Number who attended in person (after the meeting)</label>
+            <input type="number" class="form-control" id="attendance" name="attendance" min="0" max="5000"
+                   style="max-width: 160px;" value="<?php echo $event["attendance"] !== null ? (int) $event["attendance"] : ""; ?>">
+            <div class="form-text">Leave empty if not known. Shown to everyone beside past presentations.</div>
         </div>
         <div class="mb-3">
             <label class="form-label" for="status">Status</label>

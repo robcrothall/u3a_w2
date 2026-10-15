@@ -33,7 +33,8 @@ require APP_DIR . "/templates/header.php";
                 <?php echo htmlspecialchars($event["presenter_name"]); ?> &ndash;
                 <?php echo htmlspecialchars($event["title"]); ?>
             </h5>
-            <p class="text-muted mb-2"><?php echo htmlspecialchars(date("j F Y", strtotime($event["presentation_date"]))); ?></p>
+            <p class="text-muted mb-2"><?php echo htmlspecialchars(date("j F Y", strtotime($event["presentation_date"]))); ?>
+                <?php if (($event["attendance"] ?? null) !== null): ?>&middot; <?php echo (int) $event["attendance"]; ?> attended in person<?php endif; ?></p>
             <ul class="mb-0">
                 <?php foreach ($event["files"] as $file): ?>
                 <li>

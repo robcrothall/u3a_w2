@@ -9,6 +9,8 @@ $past = events_past($per_page, ($page - 1) * $per_page);
 $past_pages = max(1, (int) ceil(events_past_count() / $per_page));
 $is_admin = !empty($_SESSION["id"]) && user_has_role((int) $_SESSION["id"], "admin");
 
+[$att_n, $att_avg, $att_max] = attendance_summary();
+
 $page_title = "Events";
 require APP_DIR . "/templates/header.php";
 ?>
@@ -43,6 +45,12 @@ require APP_DIR . "/templates/header.php";
     <?php endforeach; ?>
 
     <h2 class="mt-5">Past presentations</h2>
+    <?php if ($att_n > 0): ?>
+    <p class="text-muted">
+        Attendance in person, recorded for <?php echo $att_n; ?> meeting<?php echo $att_n === 1 ? "" : "s"; ?>:
+        average <?php echo round($att_avg); ?>, highest <?php echo $att_max; ?>.
+    </p>
+    <?php endif; ?>
     <?php if (empty($past)): ?>
     <p><em>Nothing to show yet.</em></p>
     <?php endif; ?>
@@ -51,6 +59,9 @@ require APP_DIR . "/templates/header.php";
         <strong><?php echo htmlspecialchars(date("j F Y", strtotime($event["presentation_date"]))); ?></strong>
         &ndash; <?php echo htmlspecialchars($event["presenter_name"]); ?>:
         <?php echo htmlspecialchars($event["title"]); ?>
+        <?php if (($event["attendance"] ?? null) !== null): ?>
+        <span class="badge bg-light text-dark border"><?php echo (int) $event["attendance"]; ?> attended</span>
+        <?php endif; ?>
         <?php if (!empty($event["summary"])): ?>
         <div class="text-muted"><?php echo nl2br(htmlspecialchars($event["summary"])); ?></div>
         <?php endif; ?>

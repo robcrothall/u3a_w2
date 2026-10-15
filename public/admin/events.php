@@ -39,7 +39,7 @@ require APP_DIR . "/templates/header.php";
     <div class="table-responsive">
     <table class="table table-striped align-middle">
         <thead>
-            <tr><th>Date</th><th>Presenter</th><th>Title</th><th>Status</th><th></th></tr>
+            <tr><th>Date</th><th>Presenter</th><th>Title</th><th class="text-end">Attended</th><th>Status</th><th></th></tr>
         </thead>
         <tbody>
             <?php foreach ($events as $event): ?>
@@ -47,6 +47,7 @@ require APP_DIR . "/templates/header.php";
                 <td><?php echo htmlspecialchars($event["presentation_date"]); ?></td>
                 <td><?php echo htmlspecialchars($event["presenter_name"]); ?></td>
                 <td><?php echo htmlspecialchars($event["title"]); ?></td>
+                <td class="text-end"><?php echo $event["attendance"] !== null ? (int) $event["attendance"] : '<span class="text-muted">&ndash;</span>'; ?></td>
                 <td>
                     <?php if ($event["status"] === "draft"): ?>
                     <span class="badge bg-warning text-dark">Draft</span>
