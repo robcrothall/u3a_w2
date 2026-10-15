@@ -96,19 +96,22 @@ function household_user_ids(int $user_id): array
  */
 function paid_up_members(int $year): array
 {
-    return query(
-        "SELECT u.id, u.first_name, u.surname, u.given_name, u.email, u.email2, u.phone, u.address, u.email_opt_out, u.title, u.mobile,
+    $sql = "SELECT u.id, u.first_name, u.surname, u.given_name, u.email, u.email2, u.phone, u.address, u.email_opt_out, u.title, u.mobile,
                 COALESCE(m.membership_type, 'individual') AS membership_type,
-                p.id AS payment_id, p.amount, p.paid_date, p.recorded_by, p.receipt_sent_at,
+                p.id AS payment_id, p.amount, p.paid_date, p.recorded_by, %RECEIPT% AS receipt_sent_at,
                 CONCAT(r.first_name, ' ', r.surname) AS recorder
          FROM users u
          LEFT JOIN memberships m ON m.id = u.membership_id
          LEFT JOIN membership_payments p ON p.user_id = u.id AND p.year = ?
          LEFT JOIN users r ON r.id = p.recorded_by
          WHERE p.id IS NOT NULL OR m.membership_type = 'honorary'
-         ORDER BY u.surname, u.first_name",
-        $year
-    );
+         ORDER BY u.surname, u.first_name";
+    try {
+        return query(str_replace("%RECEIPT%", "p.receipt_sent_at", $sql), $year);
+    } catch (Throwable $e) {
+        // migration 010 (receipt_sent_at) not applied yet: the list must still work
+        return query(str_replace("%RECEIPT%", "NULL", $sql), $year);
+    }
 }
 
 function is_paid_up(int $user_id, ?int $year = null): bool
