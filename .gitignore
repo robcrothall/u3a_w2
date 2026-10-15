@@ -18,3 +18,6 @@ members_review.csv
 import_members.sql
 u3a-port-alfred_*GoogleGroups*.csv
 U3A_Members_*.xlsx
+
+# private uploaded documents (live on the server, never in git)
+storage/

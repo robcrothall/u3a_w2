@@ -107,6 +107,7 @@ if ($members_enabled) {
 <?php if ($members_enabled): ?>
             <li class="nav-item"><a class="nav-link" href="/events.php">Events</a></li>
             <li class="nav-item"><a class="nav-link" href="/recordings.php">Recordings</a></li>
+            <li class="nav-item"><a class="nav-link" href="/resources.php">Resources</a></li>
 <?php endif; ?>
 <?php if ($members_enabled && !$logged_in): ?>
             <li class="nav-item"><a class="nav-link" href="/register.php">Register</a></li>
@@ -126,6 +127,7 @@ if ($members_enabled) {
   <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="adminMenu">
     <li><a class="dropdown-item" href="/admin/site_content.php">Edit home page</a></li>
     <li><a class="dropdown-item" href="/admin/events.php">Manage events</a></li>
+    <li><a class="dropdown-item" href="/admin/resources.php">Manage resources</a></li>
     <li><a class="dropdown-item" href="/admin/members.php">Members</a></li>
     <li><a class="dropdown-item" href="/admin/speakers.php">Volunteers and interests</a></li>
     <li><a class="dropdown-item" href="/admin/invitations.php">Password invitations</a></li>
