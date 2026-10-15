@@ -42,6 +42,7 @@ $nav_is_admin = $nav_logged_in && user_has_role((int) $_SESSION["id"], "admin");
                     <li class="nav-item"><a class="nav-link" href="/register.php">Register</a></li>
                     <li class="nav-item"><a class="nav-link" href="/login.php">Login</a></li>
                     <?php else: ?>
+                    <li class="nav-item"><a class="nav-link" href="/preferences.php">My preferences</a></li>
                     <li class="nav-item"><a class="nav-link" href="/change_password.php">Change password</a></li>
                     <?php if ($nav_is_admin): ?>
                     <li class="nav-item dropdown">
@@ -53,7 +54,8 @@ $nav_is_admin = $nav_logged_in && user_has_role((int) $_SESSION["id"], "admin");
                         <li><a class="dropdown-item" href="/admin/invitations.php">Password invitations</a></li>
                         <li><a class="dropdown-item" href="/admin/payments.php">Membership payments</a></li>
                         <li><a class="dropdown-item" href="/admin/door_list.php">Door list</a></li>
-                        <li><a class="dropdown-item" href="/admin/members_export.php?scope=all">Export members (CSV)</a></li>
+                        <li><a class="dropdown-item" href="/admin/members_export.php?scope=all">Export all members (CSV)</a></li>
+                        <li><a class="dropdown-item" href="/admin/members_export.php?scope=mailing">Export mailing list (CSV)</a></li>
                         <li><a class="dropdown-item" href="/admin/recording_log.php">Recording usage</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/admin/reset_password.php">Reset member password</a></li>

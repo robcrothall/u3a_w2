@@ -141,6 +141,7 @@ require APP_DIR . "/templates/header.php";
         <a class="btn btn-sm btn-outline-secondary ms-2" href="/admin/door_list.php?year=<?php echo $year; ?>">Door list</a>
         <a class="btn btn-sm btn-outline-secondary" href="/admin/members_export.php?scope=paid&amp;year=<?php echo $year; ?>">Export paid-up (CSV)</a>
         <a class="btn btn-sm btn-outline-secondary" href="/admin/members_export.php?scope=all">Export all members (CSV)</a>
+        <a class="btn btn-sm btn-outline-secondary" href="/admin/members_export.php?scope=mailing">Export mailing list (CSV)</a>
     </p>
 
     <?php if (empty($paid)): ?>

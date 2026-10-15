@@ -33,6 +33,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $error = membership_link($id, (int) ($_POST["partner_id"] ?? 0));
         flash_set($error ?? "Partner linked. Their payments are now shared.", $error ? "danger" : "success");
         redirect($self);
+    } elseif ($action === "set_optout") {
+        $optOut = ($_POST["email_opt_out"] ?? "") === "1";
+        email_opt_out_set($id, $optOut);
+        flash_set($optOut ? "Marked: do not send newsletters or announcements." : "This member will receive newsletters and announcements.");
+        redirect($self);
     } elseif ($action === "set_admin") {
         $grant = ($_POST["admin"] ?? "") === "1";
         if (!$grant && $id === (int) $_SESSION["id"]) {
@@ -194,6 +199,26 @@ require APP_DIR . "/templates/header.php";
     </form>
     <?php endforeach; ?>
     <?php endif; ?>
+
+    <h2 class="h4 mt-5">Communication preferences</h2>
+    <form method="post" class="mb-2">
+        <?php echo csrf_field(); ?>
+        <input type="hidden" name="id" value="<?php echo $id; ?>">
+        <input type="hidden" name="action" value="set_optout">
+        <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" id="email_opt_out" name="email_opt_out" value="1"
+                   <?php echo !empty($member["email_opt_out"]) ? "checked" : ""; ?>>
+            <label class="form-check-label" for="email_opt_out">Do not send newsletters or announcements</label>
+        </div>
+        <p class="text-muted small mb-2">
+            They stay a member. They are left out of mailing lists and bulk invitations. Password links they
+            ask for and payment receipts are still sent.
+            <?php if (!empty($member["email_opt_out"]) && !empty($member["email_opt_out_at"])): ?>
+            Set on <?php echo htmlspecialchars($member["email_opt_out_at"]); ?>.
+            <?php endif; ?>
+        </p>
+        <button type="submit" class="btn btn-outline-primary btn-sm">Save preference</button>
+    </form>
 
     <h2 class="h4 mt-5">Login and role</h2>
     <?php $isAdminUser = user_has_role($id, "admin"); ?>

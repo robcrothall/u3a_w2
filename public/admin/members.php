@@ -45,7 +45,10 @@ require APP_DIR . "/templates/header.php";
             <?php foreach ($members as $m): ?>
             <tr>
                 <td><?php echo htmlspecialchars($m["surname"] . ", " . $m["first_name"]); ?></td>
-                <td><?php echo $m["email"] !== null ? htmlspecialchars($m["email"]) : '<span class="text-muted">none</span>'; ?></td>
+                <td>
+                    <?php echo $m["email"] !== null ? htmlspecialchars($m["email"]) : '<span class="text-muted">none</span>'; ?>
+                    <?php if (!empty($m["email_opt_out"])): ?><span class="badge bg-warning text-dark" title="Does not want newsletters or announcements">No newsletters</span><?php endif; ?>
+                </td>
                 <td class="text-nowrap"><?php echo htmlspecialchars((string) $m["phone"]); ?></td>
                 <td>
                     <?php echo htmlspecialchars(ucfirst($m["membership_type"])); ?>

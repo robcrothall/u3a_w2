@@ -4,13 +4,19 @@ require __DIR__ . "/../_app_path.php";
 require APP_DIR . "/config/config.php";
 require_role("admin");
 
-$scope = ($_GET["scope"] ?? "all") === "paid" ? "paid" : "all";
+$scope = in_array($_GET["scope"] ?? "all", ["paid", "mailing"], true) ? $_GET["scope"] : "all";
 $year = payment_year();
 
 if ($scope === "paid") {
     $members = paid_up_members($year);
     $paid_label = fn($m) => $year;
     $filename = "u3a-paid-up-members-$year.csv";
+} elseif ($scope === "mailing") {
+    // everyone with an email address who has NOT asked to be left off newsletters/announcements
+    $members = array_values(array_filter(members_all(), fn($m) => !empty($m["email"]) && empty($m["email_opt_out"])));
+    $paidIds = array_flip(array_map(fn($p) => (int) $p["id"], paid_up_members((int) date("Y"))));
+    $paid_label = fn($m) => isset($paidIds[(int) $m["id"]]) ? date("Y") : "";
+    $filename = "u3a-mailing-list-" . date("Y-m-d") . ".csv";
 } else {
     $members = members_all();
     $paidIds = array_flip(array_map(fn($p) => (int) $p["id"], paid_up_members((int) date("Y"))));
@@ -24,7 +30,7 @@ header("Cache-Control: no-store");
 
 $out = fopen("php://output", "w");
 fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM so Excel shows accented names correctly
-fputcsv($out, ["First name", "Surname", "Email", "Email 2", "Phone", "Address", "Membership", "Paid-up year"], ",", '"', "");
+fputcsv($out, ["First name", "Surname", "Email", "Email 2", "Phone", "Address", "Membership", "Paid-up year", "Do not email"], ",", '"', "");
 foreach ($members as $m) {
     fputcsv($out, [
         csv_safe($m["first_name"]),
@@ -35,6 +41,7 @@ foreach ($members as $m) {
         csv_safe($m["address"]),
         $m["membership_type"],
         $paid_label($m),
+        !empty($m["email_opt_out"]) ? "Yes" : "",
     ], ",", '"', "");
 }
 fclose($out);

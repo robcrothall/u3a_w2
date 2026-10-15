@@ -174,3 +174,26 @@ Nothing above is built yet — just recorded so it isn't lost.
 - `tools/import_members.php` builds a review CSV + issues list + SQL from the
   sheet and the Google Groups export. Outputs hold personal data and live OUTSIDE
   the repo. `tools/xlsx_to_tsv.ps1` converts the workbook for it.
+
+## To-do list after the Committee review (2026-10-15)
+
+The members' area has been live since 2026-10-10. Requests from the Committee meeting of
+2026-10-12, in the recommended order of implementation:
+
+| # | Task | Why this position | Status |
+|---|------|-------------------|--------|
+| 1 | **Do not send newsletters or announcements** flag (admin tick box, member "My preferences" page, left out of mailing exports and bulk invitations) | Every email feature below must respect it | built 2026-10-15 (migration 006) |
+| 2 | **Home page**: the three quoted phrases in bold italics, no quotation marks | 5-minute change | built 2026-10-15 |
+| 3 | **Attendance** per past presentation: number who attended in person; entered by admins, shown to everyone | Small, independent, quick win | to do |
+| 4 | **Member profile**: titles (e.g. Rev Dr), mobile number stored as (+cc) ddd ddd dddd, three 250-character questions (prepared to present / skills / subjects wanted), risk-and-filming acknowledgement above the Register button; members can update their own details | Needed before bulk email (merge fields) and gives a "My details" page | to do |
+| 5 | **Resources page**: interesting links and downloadable documents (PDF, Word, ODT) in one list, newest first, each visible to Everyone / Logged-in members / Admins only | Documents are needed as email attachments/links | to do |
+| 6 | **Payment receipts**: email a confirmation (date, amount) to the individual or couple when a payment is recorded; Reply-To accounts@u3aportalfred.org.za | Uses the mail layer; low risk way to learn real-world deliverability | to do |
+| 7 | **Bulk email**: audience (all members with email / not paid-up this year / admins), subject, body with merge keywords ($first_name$ etc.), up to 3 documents, Reply-To info@u3aportalfred.org.za | Biggest and riskiest: depends on 1, 4, 5 and 6 | to do |
+
+### Design decisions already agreed or recommended
+* Opted-out members keep their record. Service messages (password links) and payment receipts are
+  still sent to them; newsletters, announcements and bulk invitations are not.
+* Documents are stored in a private folder outside `public_html` and served through a script that
+  checks who may read them, so "members only" really is members only.
+* Bulk email is sent in batches with a sent-log, because shared hosting limits emails per hour;
+  every message carries a "no longer wish to receive these" link.

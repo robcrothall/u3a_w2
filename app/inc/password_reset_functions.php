@@ -17,7 +17,7 @@ function users_needing_invitation(int $limit = 50): array
 {
     return query(
         "SELECT u.id, u.first_name, u.surname, u.email FROM users u
-         WHERE u.email IS NOT NULL AND u.password_hash = '!'
+         WHERE u.email IS NOT NULL AND u.password_hash = '!' AND u.email_opt_out = 0
            AND NOT EXISTS (SELECT 1 FROM password_resets p
                            WHERE p.user_id = u.id AND p.used_at IS NULL AND p.expires_at > NOW())
          ORDER BY u.surname, u.first_name LIMIT " . (int) $limit
@@ -28,7 +28,7 @@ function users_needing_invitation_count(): int
 {
     return (int) query(
         "SELECT COUNT(*) AS n FROM users u
-         WHERE u.email IS NOT NULL AND u.password_hash = '!'
+         WHERE u.email IS NOT NULL AND u.password_hash = '!' AND u.email_opt_out = 0
            AND NOT EXISTS (SELECT 1 FROM password_resets p
                            WHERE p.user_id = u.id AND p.used_at IS NULL AND p.expires_at > NOW())"
     )[0]["n"];

@@ -53,6 +53,19 @@ function member_partner_names(array $user): string
     return implode(" and ", $names);
 }
 
+/**
+ * "Do not send newsletters or announcements". The person stays a member; they are
+ * left out of mailing lists. Records when the choice was made.
+ */
+function email_opt_out_set(int $user_id, bool $opt_out): void
+{
+    query(
+        "UPDATE users SET email_opt_out = ?, email_opt_out_at = " . ($opt_out ? "NOW()" : "NULL") . " WHERE id = ?",
+        $opt_out ? 1 : 0,
+        $user_id
+    );
+}
+
 /** Page of members for the staff list; $search matches name/email/phone. */
 function members_list(string $search, int $limit, int $offset): array
 {
@@ -64,7 +77,7 @@ function members_list(string $search, int $limit, int $offset): array
         $params = [$like, $like, $like, $like, $like];
     }
     $rows = query(
-        "SELECT u.id, u.first_name, u.surname, u.email, u.phone, u.membership_id,
+        "SELECT u.id, u.first_name, u.surname, u.email, u.phone, u.membership_id, u.email_opt_out,
                 COALESCE(m.membership_type, 'individual') AS membership_type
          FROM users u LEFT JOIN memberships m ON m.id = u.membership_id
          WHERE $where ORDER BY u.surname, u.first_name LIMIT " . (int) $limit . " OFFSET " . (int) $offset,

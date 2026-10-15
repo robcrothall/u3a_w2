@@ -112,6 +112,7 @@ if ($members_enabled) {
             <li class="nav-item"><a class="nav-link" href="/register.php">Register</a></li>
             <li class="nav-item"><a class="nav-link" href="/login.php">Login</a></li>
 <?php elseif ($members_enabled): ?>
+            <li class="nav-item"><a class="nav-link" href="/preferences.php">My preferences</a></li>
             <li class="nav-item"><a class="nav-link" href="/change_password.php">Change password</a></li>
 <?php if ($is_admin): ?>
 <li class="nav-item dropdown">
@@ -123,7 +124,8 @@ if ($members_enabled) {
     <li><a class="dropdown-item" href="/admin/invitations.php">Password invitations</a></li>
     <li><a class="dropdown-item" href="/admin/payments.php">Membership payments</a></li>
     <li><a class="dropdown-item" href="/admin/door_list.php">Door list</a></li>
-    <li><a class="dropdown-item" href="/admin/members_export.php?scope=all">Export members (CSV)</a></li>
+    <li><a class="dropdown-item" href="/admin/members_export.php?scope=all">Export all members (CSV)</a></li>
+    <li><a class="dropdown-item" href="/admin/members_export.php?scope=mailing">Export mailing list (CSV)</a></li>
     <li><a class="dropdown-item" href="/admin/recording_log.php">Recording usage</a></li>
     <li><hr class="dropdown-divider"></li>
     <li><a class="dropdown-item" href="/admin/reset_password.php">Reset member password</a></li>
@@ -143,10 +145,10 @@ if ($members_enabled) {
           <img src="img/U3A_Logo.jpg" class="rounded shadow-sm" alt="U3A Logo"
                   style="object-fit: cover; width: 50%; height: 50%;">
           <h1 class="display-5 fw-bold">University of the Third Age - U3A</h1>
-          <p class="lead mb-4">“Learning for leisure and pleasure”</p>
-          <p class="mb-4">The “University of the Third Age”, or U3A as it is usually known,
+          <p class="lead mb-4"><strong><em>Learning for leisure and pleasure</em></strong></p>
+          <p class="mb-4">The <strong><em>University of the Third Age</em></strong>, or U3A as it is usually known,
             is a learning and social community organized by and for people who can best be
-            described as in active retirement – the “Third Age” of their lives.</p>
+            described as in active retirement – the <strong><em>Third Age</em></strong> of their lives.</p>
           <p class="mb-4">The overall aim is to provide members with both the stimulus of
             mental activity and the satisfaction of suitable activities with people of a similar age.
           </p>
