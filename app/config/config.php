@@ -39,3 +39,4 @@ require_once dirname(__DIR__) . "/inc/password_reset_functions.php";
 require_once dirname(__DIR__) . "/inc/site_content_functions.php";
 require_once dirname(__DIR__) . "/inc/profile_functions.php";
 require_once dirname(__DIR__) . "/inc/resource_functions.php";
+require_once dirname(__DIR__) . "/inc/receipt_functions.php";

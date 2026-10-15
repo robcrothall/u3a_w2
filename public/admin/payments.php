@@ -20,14 +20,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         redirect("/admin/payments.php?year=" . $year);
     }
 
+    if (!empty($_POST["resend_user_id"])) {
+        $resendYear = (int) ($_POST["year"] ?? $year);
+        [$ok, $note] = send_receipt((int) $_POST["resend_user_id"], $resendYear);
+        flash_set($note, $ok ? "success" : "warning");
+        redirect("/admin/payments.php?year=" . $resendYear);
+    }
+
     [$errors, $clean] = payment_validate($_POST);
     if (empty($errors)) {
         $member = member_find($clean["user_id"]);
         $updated = payment_save($clean, (int) $_SESSION["id"]);
         $partners = member_partner_names($member);
-        flash_set(($updated ? "Payment corrected for " : "Payment recorded for ")
+        $message = ($updated ? "Payment corrected for " : "Payment recorded for ")
             . $member["first_name"] . " " . $member["surname"]
-            . ($partners !== "" ? " and " . $partners : "") . " (" . $clean["year"] . ").");
+            . ($partners !== "" ? " and " . $partners : "") . " (" . $clean["year"] . ").";
+        $type = "success";
+        if (($_POST["send_receipt"] ?? "") === "1") {
+            [$sent, $note] = send_receipt($clean["user_id"], $clean["year"]);
+            $message .= " " . $note;
+            $type = $sent ? "success" : "warning";
+        } else {
+            $message .= " No receipt was emailed.";
+        }
+        flash_set($message, $type);
         redirect("/admin/payments.php?year=" . $clean["year"]);
     }
     $year = $clean["year"] >= 2020 ? $clean["year"] : $year;
@@ -119,6 +135,11 @@ require APP_DIR . "/templates/header.php";
                               action="/admin/payments.php?year=<?php echo $year; ?>&amp;search=<?php echo urlencode($search); ?>">
                             <?php echo csrf_field(); ?>
                             <input type="hidden" name="user_id" value="<?php echo (int) $m["id"]; ?>">
+                            <div class="form-check text-start small mb-1">
+                                <input class="form-check-input" type="checkbox" id="rc<?php echo (int) $m["id"]; ?>" name="send_receipt" value="1"
+                                       <?php echo $already ? "" : "checked"; ?>>
+                                <label class="form-check-label" for="rc<?php echo (int) $m["id"]; ?>">Email a receipt</label>
+                            </div>
                             <input type="hidden" name="year" value="<?php echo $year; ?>">
                             <button type="submit" class="btn btn-primary btn-sm">
                                 <?php echo $already ? "Correct payment" : "Record payment"; ?>
@@ -149,7 +170,7 @@ require APP_DIR . "/templates/header.php";
     <?php else: ?>
     <div class="table-responsive">
     <table class="table table-striped align-middle">
-        <thead><tr><th>Member</th><th>Membership</th><th class="text-end">Amount</th><th>Date paid</th><th>Recorded by</th><th></th></tr></thead>
+        <thead><tr><th>Member</th><th>Membership</th><th class="text-end">Amount</th><th>Date paid</th><th>Recorded by</th><th>Receipt</th><th></th></tr></thead>
         <tbody>
             <?php foreach ($paid as $p): ?>
             <tr>
@@ -158,6 +179,19 @@ require APP_DIR . "/templates/header.php";
                 <td class="text-end"><?php echo $p["amount"] !== null ? "R" . number_format((float) $p["amount"], 2) : "&ndash;"; ?></td>
                 <td><?php echo $p["payment_id"] === null ? "Honorary" : htmlspecialchars($p["paid_date"]); ?></td>
                 <td><?php echo htmlspecialchars((string) $p["recorder"]); ?></td>
+                <td class="text-nowrap small">
+                    <?php if ($p["payment_id"] === null): ?>
+                    <span class="text-muted">&ndash;</span>
+                    <?php else: ?>
+                    <?php echo $p["receipt_sent_at"] ? "Sent " . htmlspecialchars(substr($p["receipt_sent_at"], 0, 10)) : '<span class="text-muted">not sent</span>'; ?>
+                    <form method="post" class="d-inline">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="year" value="<?php echo $year; ?>">
+                        <input type="hidden" name="resend_user_id" value="<?php echo (int) $p["id"]; ?>">
+                        <button type="submit" class="btn btn-link btn-sm p-0 ms-1"><?php echo $p["receipt_sent_at"] ? "resend" : "send"; ?></button>
+                    </form>
+                    <?php endif; ?>
+                </td>
                 <td class="text-end">
                     <?php if ($p["payment_id"] !== null): ?>
                     <form method="post" onsubmit="return confirm('Remove this payment? The member (and any partner) will no longer be paid-up for <?php echo $year; ?>.');">
