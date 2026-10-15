@@ -151,7 +151,47 @@ function member_validate(array $input, int $id): array
     if (mb_strlen($clean["address"]) > 500) {
         $errors[] = "The address is too long (maximum 500 characters).";
     }
-    return [$errors, $clean];
+    [$profileErrors, $profile] = profile_validate($input);
+    return [array_merge($errors, $profileErrors), array_merge($clean, $profile)];
+}
+
+/** Validation for a member editing their own details (no email, no membership). */
+function member_self_validate(array $input): array
+{
+    $errors = [];
+    $clean = [
+        "first_name" => trim((string) ($input["first_name"] ?? "")),
+        "surname" => trim((string) ($input["surname"] ?? "")),
+        "phone" => trim((string) ($input["phone"] ?? "")),
+        "address" => trim((string) ($input["address"] ?? "")),
+    ];
+    if ($clean["first_name"] === "" || mb_strlen($clean["first_name"]) > 100) {
+        $errors[] = "Please enter your first name (up to 100 characters).";
+    }
+    if ($clean["surname"] === "" || mb_strlen($clean["surname"]) > 100) {
+        $errors[] = "Please enter your surname (up to 100 characters).";
+    }
+    if (mb_strlen($clean["phone"]) > 100) {
+        $errors[] = "The phone field is too long (maximum 100 characters).";
+    }
+    if (mb_strlen($clean["address"]) > 500) {
+        $errors[] = "The address is too long (maximum 500 characters).";
+    }
+    [$profileErrors, $profile] = profile_validate($input);
+    return [array_merge($errors, $profileErrors), array_merge($clean, $profile)];
+}
+
+function member_self_update(int $id, array $c): void
+{
+    query(
+        "UPDATE users SET first_name = ?, surname = ?, phone = ?, address = ? WHERE id = ?",
+        $c["first_name"],
+        $c["surname"],
+        $c["phone"] === "" ? null : $c["phone"],
+        $c["address"] === "" ? null : $c["address"],
+        $id
+    );
+    member_profile_save($id, $c);
 }
 
 function member_update(int $id, array $c): void

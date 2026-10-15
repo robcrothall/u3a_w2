@@ -30,7 +30,7 @@ header("Cache-Control: no-store");
 
 $out = fopen("php://output", "w");
 fwrite($out, "\xEF\xBB\xBF"); // UTF-8 BOM so Excel shows accented names correctly
-fputcsv($out, ["First name", "Surname", "Email", "Email 2", "Phone", "Address", "Membership", "Paid-up year", "Do not email"], ",", '"', "");
+fputcsv($out, ["First name", "Surname", "Email", "Email 2", "Phone", "Address", "Membership", "Paid-up year", "Do not email", "Title", "Mobile"], ",", '"', "");
 foreach ($members as $m) {
     fputcsv($out, [
         csv_safe($m["first_name"]),
@@ -42,6 +42,8 @@ foreach ($members as $m) {
         $m["membership_type"],
         $paid_label($m),
         !empty($m["email_opt_out"]) ? "Yes" : "",
+        csv_safe($m["title"] ?? ""),
+        csv_safe($m["mobile"] ?? ""),
     ], ",", '"', "");
 }
 fclose($out);

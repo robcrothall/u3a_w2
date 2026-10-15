@@ -4,7 +4,8 @@ require APP_DIR . "/config/config.php";
 require_role("admin");
 
 $errors = [];
-$form = ["first_name" => "", "surname" => "", "email" => "", "email2" => "", "phone" => "", "address" => ""];
+$form = ["first_name" => "", "surname" => "", "email" => "", "email2" => "", "phone" => "", "address" => "",
+    "title" => "", "mobile" => "", "can_present" => "", "skills" => "", "wants_subjects" => ""];
 $type = "individual";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -14,6 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $type = ($_POST["membership_type"] ?? "") === "honorary" ? "honorary" : "individual";
     if (empty($errors)) {
         $new_id = member_create($clean, $type);
+        member_profile_save($new_id, $clean);
         flash_set("Member added. To make them a couple, link their partner below.");
         redirect("/admin/member_edit.php?id=" . $new_id);
     }
@@ -74,6 +76,8 @@ require APP_DIR . "/templates/header.php";
                 <textarea class="form-control" id="address" name="address" rows="2" maxlength="500"><?php echo htmlspecialchars($form["address"]); ?></textarea>
             </div>
         </div>
+        <h2 class="h5 mt-3">More about the member</h2>
+        <?php require APP_DIR . "/templates/profile_fields.php"; ?>
         <button type="submit" class="btn btn-primary">Add member</button>
         <a class="btn btn-outline-secondary" href="/admin/members.php">Cancel</a>
     </form>

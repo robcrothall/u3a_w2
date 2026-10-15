@@ -29,6 +29,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         set_password((int) $user["id"], $new_password, false);
         $success = true;
         $forced = false;
+        if (consent_needed($user)) {
+            flash_set("Your password has been changed.");
+            redirect("/consent.php");
+        }
     }
 }
 

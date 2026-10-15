@@ -58,7 +58,7 @@ function members_search(string $search, int $limit = 25): array
 function members_all(): array
 {
     return query(
-        "SELECT u.id, u.first_name, u.surname, u.given_name, u.email, u.email2, u.phone, u.address, u.email_opt_out,
+        "SELECT u.id, u.first_name, u.surname, u.given_name, u.email, u.email2, u.phone, u.address, u.email_opt_out, u.title, u.mobile,
                 COALESCE(m.membership_type, 'individual') AS membership_type
          FROM users u LEFT JOIN memberships m ON m.id = u.membership_id
          ORDER BY u.surname, u.first_name"
@@ -97,7 +97,7 @@ function household_user_ids(int $user_id): array
 function paid_up_members(int $year): array
 {
     return query(
-        "SELECT u.id, u.first_name, u.surname, u.given_name, u.email, u.email2, u.phone, u.address, u.email_opt_out,
+        "SELECT u.id, u.first_name, u.surname, u.given_name, u.email, u.email2, u.phone, u.address, u.email_opt_out, u.title, u.mobile,
                 COALESCE(m.membership_type, 'individual') AS membership_type,
                 p.id AS payment_id, p.amount, p.paid_date, p.recorded_by,
                 CONCAT(r.first_name, ' ', r.surname) AS recorder

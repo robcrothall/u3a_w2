@@ -23,6 +23,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ((int) $user["must_change_password"] === 1) {
                 redirect("/change_password.php?forced=1");
             }
+            if (consent_needed($user)) {
+                redirect("/consent.php");
+            }
             redirect("/index.php");
         }
     }

@@ -112,8 +112,14 @@ if ($members_enabled) {
             <li class="nav-item"><a class="nav-link" href="/register.php">Register</a></li>
             <li class="nav-item"><a class="nav-link" href="/login.php">Login</a></li>
 <?php elseif ($members_enabled): ?>
-            <li class="nav-item"><a class="nav-link" href="/preferences.php">My preferences</a></li>
-            <li class="nav-item"><a class="nav-link" href="/change_password.php">Change password</a></li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="accountMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">My account</a>
+              <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountMenu">
+                <li><a class="dropdown-item" href="/my_details.php">My details</a></li>
+                <li><a class="dropdown-item" href="/preferences.php">My preferences</a></li>
+                <li><a class="dropdown-item" href="/change_password.php">Change password</a></li>
+              </ul>
+            </li>
 <?php if ($is_admin): ?>
 <li class="nav-item dropdown">
   <a class="nav-link dropdown-toggle" href="#" id="adminMenu" role="button" data-bs-toggle="dropdown" aria-expanded="false">Admin</a>
@@ -121,6 +127,7 @@ if ($members_enabled) {
     <li><a class="dropdown-item" href="/admin/site_content.php">Edit home page</a></li>
     <li><a class="dropdown-item" href="/admin/events.php">Manage events</a></li>
     <li><a class="dropdown-item" href="/admin/members.php">Members</a></li>
+    <li><a class="dropdown-item" href="/admin/speakers.php">Volunteers and interests</a></li>
     <li><a class="dropdown-item" href="/admin/invitations.php">Password invitations</a></li>
     <li><a class="dropdown-item" href="/admin/payments.php">Membership payments</a></li>
     <li><a class="dropdown-item" href="/admin/door_list.php">Door list</a></li>

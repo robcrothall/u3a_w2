@@ -22,6 +22,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $form = array_merge($member, $clean);
         if (empty($errors)) {
             member_update($id, $clean);
+            member_profile_save($id, $clean);
             flash_set("Details saved.");
             redirect($self);
         }
@@ -137,6 +138,8 @@ require APP_DIR . "/templates/header.php";
                 <textarea class="form-control" id="address" name="address" rows="2" maxlength="500"><?php echo htmlspecialchars((string) $form["address"]); ?></textarea>
             </div>
         </div>
+        <h2 class="h5 mt-3">More about the member</h2>
+        <?php require APP_DIR . "/templates/profile_fields.php"; ?>
         <button type="submit" class="btn btn-primary">Save details</button>
     </form>
 
@@ -219,6 +222,13 @@ require APP_DIR . "/templates/header.php";
         </p>
         <button type="submit" class="btn btn-outline-primary btn-sm">Save preference</button>
     </form>
+
+    <p class="text-muted small">
+        Participation and privacy acknowledgement:
+        <?php echo !empty($member["consent_at"])
+            ? "accepted (version " . (int) $member["consent_version"] . ") on " . htmlspecialchars($member["consent_at"])
+            : "not yet accepted"; ?>
+    </p>
 
     <h2 class="h4 mt-5">Login and role</h2>
     <?php $isAdminUser = user_has_role($id, "admin"); ?>
