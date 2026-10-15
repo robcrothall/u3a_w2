@@ -120,7 +120,7 @@ require APP_DIR . "/templates/header.php";
                     <td colspan="3" class="text-muted">Honorary members do not pay.</td>
                     <?php else: ?>
                     <td style="max-width: 120px;">
-                        <input type="text" inputmode="decimal" class="form-control" name="amount" placeholder="<?php echo $m["membership_type"] === "couple" ? "80" : "50"; ?>"
+                        <input type="text" inputmode="decimal" class="form-control" name="amount" placeholder="<?php echo $m["membership_type"] === "couple" ? "80.00" : "50.00"; ?>" title="Suggested fee"
                                form="pay<?php echo (int) $m["id"]; ?>"
                                value="<?php echo $already ? htmlspecialchars((string) $already["amount"]) : ""; ?>">
                     </td>
@@ -183,7 +183,7 @@ require APP_DIR . "/templates/header.php";
                     <?php if ($p["payment_id"] === null): ?>
                     <span class="text-muted">&ndash;</span>
                     <?php else: ?>
-                    <?php echo $p["receipt_sent_at"] ? "Sent " . htmlspecialchars(substr($p["receipt_sent_at"], 0, 10)) : '<span class="text-muted">not sent</span>'; ?>
+                    <?php echo $p["receipt_sent_at"] ? "Sent " . htmlspecialchars(substr($p["receipt_sent_at"], 0, 16)) : '<span class="text-muted">not sent</span>'; ?>
                     <form method="post" class="d-inline">
                         <?php echo csrf_field(); ?>
                         <input type="hidden" name="year" value="<?php echo $year; ?>">
