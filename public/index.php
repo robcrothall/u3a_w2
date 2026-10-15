@@ -130,6 +130,8 @@ if ($members_enabled) {
     <li><a class="dropdown-item" href="/admin/resources.php">Manage resources</a></li>
     <li><a class="dropdown-item" href="/admin/members.php">Members</a></li>
     <li><a class="dropdown-item" href="/admin/speakers.php">Volunteers and interests</a></li>
+    <li><a class="dropdown-item" href="/admin/mail_compose.php">Send an email</a></li>
+    <li><a class="dropdown-item" href="/admin/mail_campaigns.php">Messages sent</a></li>
     <li><a class="dropdown-item" href="/admin/invitations.php">Password invitations</a></li>
     <li><a class="dropdown-item" href="/admin/payments.php">Membership payments</a></li>
     <li><a class="dropdown-item" href="/admin/door_list.php">Door list</a></li>
