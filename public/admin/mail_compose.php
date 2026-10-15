@@ -26,7 +26,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $campaign = $clean;       // doc_ids / attach / subject / body in the shape the builder expects
 
         if ($action === "queue") {
-            if (!$recipients) {
+            if (!bulk_mail_enabled()) {
+                $errors[] = BULK_MAIL_OFF_MESSAGE;
+            } elseif (!$recipients) {
                 $errors[] = "Nobody is in that audience, so there is nothing to send.";
             } else {
                 $id = campaign_create($clean, $me);
@@ -73,6 +75,12 @@ require APP_DIR . "/templates/header.php";
         <a href="/admin/mail_campaigns.php">Messages already sent</a>
     </p>
 
+    <?php if (!bulk_mail_enabled()): ?>
+    <div class="alert alert-warning">
+        <strong>Bulk sending is switched off on this site.</strong> You can preview and send a test to yourself,
+        but not queue a message for members. (This protects real members from messages sent by a test site.)
+    </div>
+    <?php endif; ?>
     <?php if ($notice): ?>
     <div class="alert alert-<?php echo $notice[0]; ?>"><?php echo htmlspecialchars($notice[1]); ?></div>
     <?php endif; ?>

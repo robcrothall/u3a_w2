@@ -32,6 +32,18 @@ const MAIL_HOURLY_LIMIT = 400;                   // the host's limit (per hour, 
 const MAIL_HOURLY_SAFE = 340;                    // stay below it: receipts and password emails share the limit
 const MAIL_MAX_DOCS = 3;
 
+/**
+ * Bulk sending (campaigns and bulk password invitations) is OFF unless this site's .env
+ * contains MAIL_BULK_ENABLED=1. The test/development site shares real members' addresses,
+ * so it must never mass-mail by accident. "Send a test to me" always works.
+ */
+function bulk_mail_enabled(): bool
+{
+    return env("MAIL_BULK_ENABLED", "0") === "1";
+}
+
+const BULK_MAIL_OFF_MESSAGE = "Bulk sending is switched off on this site. (It is on only on the live site, to stop test data from emailing real members.) You can still preview and send a test to yourself.";
+
 /** Common SELECT for a recipient with everything the merge keywords need. */
 function mail_recipient_sql(): string
 {

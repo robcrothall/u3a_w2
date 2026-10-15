@@ -7,6 +7,10 @@ const INVITE_BATCH = 40;   // shared hosting limits how many emails can go out p
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     csrf_check();
+    if (!bulk_mail_enabled()) {
+        flash_set(BULK_MAIL_OFF_MESSAGE, "warning");
+        redirect("/admin/invitations.php");
+    }
     $sent = 0;
     $failed = 0;
     foreach (users_needing_invitation(INVITE_BATCH) as $u) {
@@ -37,6 +41,12 @@ require APP_DIR . "/templates/header.php";
         login page.
     </p>
 
+    <?php if (!bulk_mail_enabled()): ?>
+    <div class="alert alert-warning">
+        <strong>Bulk sending is switched off on this site</strong>, so invitations cannot be sent from here.
+        You can still email an individual member from their member page.
+    </div>
+    <?php endif; ?>
     <?php if ($flash): ?>
     <div class="alert alert-<?php echo htmlspecialchars($flash["type"]); ?>"><?php echo htmlspecialchars($flash["message"]); ?></div>
     <?php endif; ?>

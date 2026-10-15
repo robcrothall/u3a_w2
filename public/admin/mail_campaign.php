@@ -18,7 +18,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $counts = campaign_counts($id);
         $allowance = mail_batch_allowance();
         $take = min($allowance, $counts["pending"]);
-        if ($campaign["status"] !== "queued") {
+        if (!bulk_mail_enabled()) {
+            flash_set(BULK_MAIL_OFF_MESSAGE, "warning");
+        } elseif ($campaign["status"] !== "queued") {
             flash_set("This message is no longer queued.", "warning");
         } elseif ($take <= 0) {
             flash_set("The hourly sending limit has been reached. Please try again in a little while.", "warning");
