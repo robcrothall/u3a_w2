@@ -18,7 +18,7 @@ if (stripos($file["url"], "https://") !== 0) {
 }
 
 // Link-preview and crawler HEAD requests are not "views".
-if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "GET") {
+if (($_SERVER["REQUEST_METHOD"] ?? "GET") === "GET" && !looks_like_robot($_SERVER["HTTP_USER_AGENT"] ?? "")) {
     log_file_access((int) $file["id"], !empty($_SESSION["id"]) ? (int) $_SESSION["id"] : null);
 }
 header("Location: " . $file["url"]);

@@ -118,6 +118,19 @@ function file_delete(int $id): void
     query("DELETE FROM presentation_files WHERE id = ?", $id);
 }
 
+/** True for crawlers, link scanners and previewers (and requests that send no User-Agent). */
+function looks_like_robot(?string $user_agent): bool
+{
+    $ua = trim((string) $user_agent);
+    if ($ua === "") {
+        return true;
+    }
+    return (bool) preg_match(
+        "/bot|crawl|spider|slurp|preview|scanner|monitor|curl|wget|python|libwww|httpclient|okhttp|headless|facebookexternalhit|whatsapp|telegram|skype|embedly|mediapartners/i",
+        $ua
+    );
+}
+
 function log_file_access(int $file_id, ?int $user_id): void
 {
     query("INSERT INTO file_access_log (file_id, user_id) VALUES (?, ?)", $file_id, $user_id);
@@ -129,7 +142,7 @@ function file_access_totals(): array
     return query(
         "SELECT p.presentation_date, p.presenter_name, f.id, f.link_text,
                 COUNT(l.id) AS opens,
-                SUM(l.user_id IS NULL) AS visitor_opens
+                COALESCE(SUM(l.id IS NOT NULL AND l.user_id IS NULL), 0) AS visitor_opens
          FROM presentation_files f
          JOIN presentations p ON p.id = f.presentation_id
          LEFT JOIN file_access_log l ON l.file_id = f.id
