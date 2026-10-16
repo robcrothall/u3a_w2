@@ -197,3 +197,8 @@ The members' area has been live since 2026-10-10. Requests from the Committee me
   checks who may read them, so "members only" really is members only.
 * Bulk email is sent in batches with a sent-log, because shared hosting limits emails per hour;
   every message carries a "no longer wish to receive these" link.
+
+## Small changes requested 2026-10-16
+
+* Home page Contact block: only info@ and accounts@ addresses (other committee mail is forwarded). Same two addresses in the footer of every other page. DONE (staging)
+* Home page "Join today" wording replaced (register on the website, change password, EFT/meeting fee). DONE (staging)

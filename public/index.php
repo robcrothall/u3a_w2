@@ -243,10 +243,16 @@ if ($members_enabled) {
               <div class="card border-primary shadow-sm">
                 <div class="card-body">
                   <h5 class="card-title">Join today</h5>
-                  <p class="card-text">Download a membership form
-                <a href="docs/U3A_Mem_Appl_20230317.pdf" target="_blank">here</a>
-                and hand it in at the next meeting.  If you have paid the membership
-                fee online, please attach the confirmation of payment to the form.</p>
+                  <p class="card-text"><?php echo $members_enabled ? '<a href="/register.php">Register on this website</a>' : "Register on this website"; ?> to join.
+                    This will add your address to our newsletter distribution list.
+                    Alternatively, download a membership form
+                    <a href="docs/U3A_Mem_Appl_20230317.pdf" target="_blank">here</a>
+                    and hand it in at the next meeting.</p>
+                  <p class="card-text">Once you are a member, you can log on to this website using your email address
+                    as a username and click the &quot;Change password&quot; link.</p>
+                  <p class="card-text mb-0">Paying the membership fee, either by EFT or at a meeting, gets you a reduced
+                    meeting fee. Banking details are listed on the membership form. If you pay by EFT,
+                    please use your name as a reference.</p>
                 </div>
               </div>
             </div>
@@ -263,10 +269,7 @@ if ($members_enabled) {
             <p class="mb-1">University of the Third Age - U3A</p>
             <p class="mb-1">c/o Settlers Park, Horton Road, Port Alfred</p>
             <p class="mb-0"><a href="mailto:info@u3aportalfred.org.za">info@u3aportalfred.org.za</a></p>
-            <p class="mb-0"><a href="mailto:membership@u3aportalfred.org.za">membership@u3aportalfred.org.za</a></p>
-            <p class="mb-0"><a href="mailto:secretary@u3aportalfred.org.za">secretary@u3aportalfred.org.za</a></p>
-            <p class="mb-0"><a href="mailto:chairman@u3aportalfred.org.za">chairman@u3aportalfred.org.za</a></p>
-            <p class="mb-0"><a href="mailto:speakerseeker@u3aportalfred.org.za">speakerseeker@u3aportalfred.org.za</a></p>
+            <p class="mb-0"><a href="mailto:accounts@u3aportalfred.org.za">accounts@u3aportalfred.org.za</a></p>
           </div>
           <div class="col-md-6 text-md-end">
             <h5>Follow Us</h5>
